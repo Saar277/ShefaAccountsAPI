@@ -9,9 +9,6 @@ const app = express();
 const port = 3000;
 
 const main = async () => {
-  const a = await Accounts.getClosedTrades();
-  console.log(JSON.stringify(a));
-
   try {
     // settings
     app.use(bodyParser.json());
@@ -30,8 +27,7 @@ const main = async () => {
     console.log(error);
   }
 };
+
 main();
 
 module.exports = app;
-
-
