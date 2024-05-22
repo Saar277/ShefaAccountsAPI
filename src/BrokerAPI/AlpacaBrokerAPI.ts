@@ -7,7 +7,11 @@ import IBrokerAPI from "./IBrokerAPI";
 import Bar from "../models/Bar";
 import { Position } from "@src/models/Position";
 import { calclautePercentagePnL } from "@src/utils/utils";
-import { TradeType, getTradeTypeFromString } from "@src/models/TradeType";
+import {
+  TradeType,
+  convertBuyOrSellStringToTradeType,
+  getTradeTypeFromString,
+} from "@src/models/TradeType";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -184,7 +188,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   ): Promise<any> {
     //A workaround is to submit several braket orders. As an example, if one wanted to buy 10 shares, but new ahead of time one wanted to first sell 50 shares, then 25, then 25 more, simply submit 3 bracket orders for 50, 25, and 25 shares respectively. Each can have different stop loss and limit prices.
 
-
     //MAIN ORDER
     await this.alpaca.createOrder({
       symbol: symbol,
@@ -256,21 +259,27 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   async getPositions(): Promise<Position[]> {
     const positions = await this.alpaca.getPositions();
 
-    return (positions.length !== 0) ? positions.map((position) => {
-      const tradeType: TradeType = getTradeTypeFromString(position.side);
+    return positions.length !== 0
+      ? positions.map((position) => {
+          const tradeType: TradeType = getTradeTypeFromString(position.side);
 
-      return {
-        symbol: position.symbol,
-        type: tradeType,
-        qty: position.qty,
-        entryPrice: position.avg_entry_price,
-        pNl: position.unrealized_pl,
-        percentPnL: calclautePercentagePnL(position.avg_entry_price, position.current_price, tradeType),
-        dailyPnl: position.unrealized_intraday_pl,
-        currentStockPrice: position.current_price,
-        netLiquidation: position.current_price * position.qty
-      }
-    }) : [];
+          return {
+            symbol: position.symbol,
+            type: tradeType,
+            qty: position.qty,
+            entryPrice: position.avg_entry_price,
+            pNl: position.unrealized_pl,
+            percentPnL: calclautePercentagePnL(
+              position.avg_entry_price,
+              position.current_price,
+              tradeType
+            ),
+            dailyPnl: position.unrealized_intraday_pl,
+            currentStockPrice: position.current_price,
+            netLiquidation: position.current_price * position.qty,
+          };
+        })
+      : [];
   }
 
   async getPosition(symbol: string): Promise<any | null> {
@@ -290,27 +299,126 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return positions.some((position) => position.symbol === symbol);
   }
 
-  async getAccountValuesHistory(): Promise<{ value: number; date: Date; }[]> {
-    const accountValuesHistory: {value: number, date: Date}[] = []
+  async getAccountValuesHistory(): Promise<{ value: number; date: Date }[]> {
+    const accountValuesHistory: { value: number; date: Date }[] = [];
 
     const protofolioHistory = await this.alpaca.getPortfolioHistory({
       period: "5A",
       timeframe: "1D",
       date_start: "",
       date_end: "",
-      extended_hours: ""
+      extended_hours: "",
     });
 
     protofolioHistory.equity.forEach((value: number, index: number) => {
       if (value !== 0) {
         accountValuesHistory.push({
           value: value,
-          date: new Date(protofolioHistory.timestamp[index])
+          date: new Date(protofolioHistory.timestamp[index]),
         });
-      };
+      }
     });
 
     return accountValuesHistory;
+  }
+
+  async getClosedTrades() {
+    const orders = this.sortOrdersBySymbol(await this.fetchAllClosedOrders());
+    return this.createTradesFromOrders(orders);
+  }
+
+  async fetchAllClosedOrders() {
+    const fiveDaysInMilliseconds: number = 432000000;
+    let allOrders = [];
+
+
+    let orders = [];
+    let index = 1;
+
+    while (orders.length !== 0 || index == 1) {
+      orders = await this.alpaca.getOrders({
+        status: "closed",
+        limit: 500, //the limit of the api,
+        after: new Date(
+          new Date().getTime() - fiveDaysInMilliseconds * index
+        ).toISOString(),
+        until: new Date(
+          new Date().getTime() - fiveDaysInMilliseconds * (index - 1)
+        ).toISOString(),
+        direction: "desc",
+        nested: "false",
+        symbols: "",
+      });
+
+      allOrders = allOrders.concat(orders);
+      index++;
+    }
+
+    return allOrders.filter((order) => order.filled_qty > 0).reverse();
+  }
+
+  sortOrdersBySymbol(orders: any[]) {
+    return orders.sort((a, b) => {
+      const nameA = a.symbol.toUpperCase(); // ignore upper and lowercase
+      const nameB = b.symbol.toUpperCase(); // ignore upper and lowercase
+      if (nameA < nameB) {
+        return -1;
+      }
+      if (nameA > nameB) {
+        return 1;
+      }
+
+      // names must be equal
+      return 0;
+    });
+  }
+
+  createTradesFromOrders(orders: any[]) {
+    let currSymbol: string = orders[0].symbol;
+    let entries: any[] = [];
+    let exits: any[] = [];
+    let entryQty: number = 0;
+    let exitQty: number = 0;
+    let type: TradeType = null;
+
+    return orders.forEach((order, index) => {
+      if (entryQty === 0 || currSymbol != order.symbol) {
+        currSymbol = order.symbol;
+        entries.push({
+          price: order.filled_avg_price,
+          qty: order.filled_qty,
+          date: order.filled_at,
+        });
+        entryQty = order.filled_qty;
+        type = convertBuyOrSellStringToTradeType(order.side);
+      } else {
+        if (convertBuyOrSellStringToTradeType(order.side) === type) {
+          entries.push({
+            price: order.filled_avg_price,
+            qty: order.filled_qty,
+            date: order.filled_at,
+          });
+          entryQty += order.filled_qty;
+        } else {
+          exits.push({
+            price: order.filled_avg_price,
+            qty: order.filled_qty,
+            date: order.filled_at,
+          });
+          exitQty += order.filled_qty;
+
+          if (entryQty === exitQty) {
+            //push to closed trades;
+            currSymbol = "";
+            entries = [];
+            exits = [];
+            entryQty = 0;
+            exitQty = 0;
+            type = null;
+          }
+        }
+      }
+    });
   }
 
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {
@@ -355,13 +463,23 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     this.alpaca.closePosition(symbol);
   }
 
-  isTimeBetween(startHour: number, startMinute: number, endHour: number, endMinute: number, targetHour: number, targetMinute: number): boolean {
+  isTimeBetween(
+    startHour: number,
+    startMinute: number,
+    endHour: number,
+    endMinute: number,
+    targetHour: number,
+    targetMinute: number
+  ): boolean {
     // Convert all times to minutes for easier comparison
     const startTimeInMinutes = startHour * 60 + startMinute;
     const endTimeInMinutes = endHour * 60 + endMinute;
     const targetTimeInMinutes = targetHour * 60 + targetMinute;
 
-    return targetTimeInMinutes >= startTimeInMinutes && targetTimeInMinutes <= endTimeInMinutes;
+    return (
+      targetTimeInMinutes >= startTimeInMinutes &&
+      targetTimeInMinutes <= endTimeInMinutes
+    );
   }
 }
 

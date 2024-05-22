@@ -55,4 +55,10 @@ export class Accounts {
       })
     );
   }
+
+  public static async getClosedTrades() {
+    return this.accounts.map(async (account) => {
+      return await account.iBrokerAPI.getClosedTrades();
+    })
+  }
 }

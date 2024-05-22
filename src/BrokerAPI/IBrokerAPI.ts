@@ -36,6 +36,7 @@ interface IBrokerAPI {
   getPosition(symbol: string): Promise<any | null>;
   isInPosition(symbol: string): Promise<boolean>;
   getAccountValuesHistory(): Promise<{ value: number; date: Date; }[]>;
+  getClosedTrades();
   getDateInApiFormat(date: Date): string;
   isClockOpen(): Promise<boolean>;
   closePosition(symbol: string): void;

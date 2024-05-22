@@ -14,3 +14,15 @@ export const getTradeTypeFromString = (str: string) => {
     return null;
   }
 };
+
+export const convertBuyOrSellStringToTradeType = (str: string) => {
+  str = str.toLowerCase();
+
+  if (str === "buy") {
+    return TradeType.LONG;
+  } else if (str === "sell") {
+    return TradeType.SHORT;
+  } else {
+    return null;
+  }
+};
