@@ -128,7 +128,7 @@ export class Accounts {
   private static getAvgWinningTrade(winningTrades): number {
     let sum = 0;
     winningTrades.forEach((trade) => {
-      sum += trade.pNl
+      sum += trade.pNl;
     });
 
     return sum / winningTrades.length;
