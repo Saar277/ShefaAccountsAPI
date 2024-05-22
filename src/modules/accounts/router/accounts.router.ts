@@ -12,4 +12,6 @@ router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
 router.route("/trades").get(accountsContoller.getAccountsTrades);
 
+router.route("/statistics/:accountName").get(accountsContoller.getAccountStatistics);
+
 module.exports = router;

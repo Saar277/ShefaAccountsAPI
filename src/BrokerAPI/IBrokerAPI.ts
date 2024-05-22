@@ -32,6 +32,7 @@ interface IBrokerAPI {
   ): Promise<any>;
   getOpenOrders(symbol?: string): Promise<any[]>;
   getCash(): Promise<number>;
+  getMoneyAmount(): Promise<number>;
   getPositions(): Promise<Position[]>
   getPosition(symbol: string): Promise<any | null>;
   isInPosition(symbol: string): Promise<boolean>;

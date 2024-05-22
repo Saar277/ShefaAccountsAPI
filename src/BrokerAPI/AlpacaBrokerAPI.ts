@@ -260,6 +260,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return account.cash;
   }
 
+  async getMoneyAmount(): Promise<number> {
+    return parseInt((await this.alpaca.getAccount()).portfolio_value);
+  }
+
   async getPositions(): Promise<Position[]> {
     const positions = await this.alpaca.getPositions();
 
@@ -306,7 +310,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   async getAccountValuesHistory(): Promise<{ value: number; date: Date }[]> {
     const accountValuesHistory: { value: number; date: Date }[] = [];
 
-    const protofolioHistory = await this.alpaca.getPortfolioHistory({
+    const portfolioHistory = await this.alpaca.getPortfolioHistory({
       period: "5A",
       timeframe: "1D",
       date_start: "",
@@ -314,11 +318,11 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       extended_hours: "",
     });
 
-    protofolioHistory.equity.forEach((value: number, index: number) => {
+    portfolioHistory.equity.forEach((value: number, index: number) => {
       if (value !== 0) {
         accountValuesHistory.push({
           value: value,
-          date: new Date(protofolioHistory.timestamp[index] * 1000),
+          date: new Date(portfolioHistory.timestamp[index] * 1000),
         });
       }
     });

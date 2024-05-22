@@ -33,5 +33,13 @@ class AccountsController {
       res.status(500).send();
     }
   };
+
+  getAccountStatistics = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountTradesStatistics(req.params.accountName));
+    } catch {
+      res.status(500).send();
+    }
+  };
 }
 export default new AccountsController();
