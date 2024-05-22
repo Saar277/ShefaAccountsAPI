@@ -6,6 +6,8 @@ import {
 import IBrokerAPI from "./IBrokerAPI";
 import Bar from "../models/Bar";
 import { Position } from "@src/models/Position";
+import { calclautePercentagePnL } from "@src/utils/utils";
+import { TradeType, getTradeTypeFromString } from "@src/models/TradeType";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -255,13 +257,18 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     const positions = await this.alpaca.getPositions();
 
     return (positions.length !== 0) ? positions.map((position) => {
+      const tradeType: TradeType = getTradeTypeFromString(position.side);
+
       return {
         symbol: position.symbol,
-        type: position.side,
+        type: tradeType,
         qty: position.qty,
         entryPrice: position.avg_entry_price,
         pNl: position.unrealized_pl,
-        dailyPnl: position.unrealized_intraday_pl
+        percentPnL: calclautePercentagePnL(position.avg_entry_price, position.current_price, tradeType),
+        dailyPnl: position.unrealized_intraday_pl,
+        currentStockPrice: position.current_price,
+        netLiquidation: position.current_price * position.qty
       }
     }) : [];
   }

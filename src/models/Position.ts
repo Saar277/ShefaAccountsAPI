@@ -8,7 +8,10 @@ export interface Position {
     entryPrice: number;
     entryTime: Date;
     pNl: number;
+    percentPnL: number;
     dailyPnl: number;
+    currentStockPrice: number;
+    netLiquidation: number;
     stopLosses?: { price: number; qty: number, isTaken?: boolean }[];
     takeProfits?: { price: number; qty: number }[];
     isTakenBaseProfit?: boolean;
