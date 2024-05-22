@@ -1,4 +1,4 @@
 export interface AccountSituation {
-    date: Date;
-    moneyAmount: number;
+  date: Date;
+  moneyAmount: number;
 }

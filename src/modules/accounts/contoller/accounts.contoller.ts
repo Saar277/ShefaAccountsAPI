@@ -36,7 +36,11 @@ class AccountsController {
 
   getAccountStatistics = async (req: Request, res: Response) => {
     try {
-      res.status(200).send(await Accounts.getAccountTradesStatistics(req.params.accountName));
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountTradesStatistics(req.params.accountName)
+        );
     } catch {
       res.status(500).send();
     }

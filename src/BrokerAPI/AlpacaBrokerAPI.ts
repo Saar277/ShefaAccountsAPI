@@ -361,7 +361,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       index++;
     }
 
-    return allOrders.filter((order) => parseInt(order.filled_qty) > 0).reverse();
+    return allOrders
+      .filter((order) => parseInt(order.filled_qty) > 0)
+      .reverse();
   }
 
   sortOrdersBySymbol(orders: any[]) {
@@ -395,11 +397,13 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
       if (entryQty === 0 || symbol != order.symbol) {
         symbol = order.symbol;
-        entries = [{
-          price: order.filled_avg_price,
-          qty: qty,
-          date: order.filled_at,
-        }];
+        entries = [
+          {
+            price: order.filled_avg_price,
+            qty: qty,
+            date: order.filled_at,
+          },
+        ];
         entryQty = qty;
         tradeType = convertBuyOrSellStringToTradeType(order.side);
       } else {
