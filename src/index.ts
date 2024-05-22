@@ -9,7 +9,7 @@ const app = express();
 const port = 3000;
 
 const main = async () => {
-  const a = await Accounts.getAccountsPositions();
+  const a = await Accounts.getAccountValuesHistory();
   console.log(JSON.stringify(a));
 
   try {

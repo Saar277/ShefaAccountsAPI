@@ -35,4 +35,24 @@ export class Accounts {
       })
     );
   }
+
+  public static async getAccountValuesHistory(): Promise<
+    {
+      accountName: string;
+      accountValuesHistory: {
+        value: number;
+        date: Date;
+      }[];
+    }[]
+  > {
+    return await Promise.all(
+      this.accounts.map(async (account) => {
+        return {
+          accountName: account.name,
+          accountValuesHistory:
+            await account.iBrokerAPI.getAccountValuesHistory(),
+        };
+      })
+    );
+  }
 }

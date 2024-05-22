@@ -290,6 +290,29 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return positions.some((position) => position.symbol === symbol);
   }
 
+  async getAccountValuesHistory(): Promise<{ value: number; date: Date; }[]> {
+    const accountValuesHistory: {value: number, date: Date}[] = []
+
+    const protofolioHistory = await this.alpaca.getPortfolioHistory({
+      period: "5A",
+      timeframe: "1D",
+      date_start: "",
+      date_end: "",
+      extended_hours: ""
+    });
+
+    protofolioHistory.equity.forEach((value: number, index: number) => {
+      if (value !== 0) {
+        accountValuesHistory.push({
+          value: value,
+          date: new Date(protofolioHistory.timestamp[index])
+        });
+      };
+    });
+
+    return accountValuesHistory;
+  }
+
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {
     return bars.map((bar) => ({
       openPrice: bar.OpenPrice,
