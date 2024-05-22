@@ -52,11 +52,11 @@ export const createTradeFromOrdersData = (
     type: tradeType,
     qty: qty,
     entryPrice: entryPrice,
-    entryTime: entries[0].date,
+    entryTime: new Date(entries[0].date),
     pNl: calclautePnL(entryPrice, closePrice, tradeType, qty),
     percentPnL: calclautePercentagePnL(entryPrice, closePrice, tradeType),
     closePrice: closePrice,
-    closeTime: exits[exits.length - 1].date,
+    closeTime: new Date(exits[exits.length - 1].date),
     entries: entries,
     exits: exits,
   };

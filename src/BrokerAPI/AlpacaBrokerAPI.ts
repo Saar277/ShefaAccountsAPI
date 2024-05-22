@@ -286,7 +286,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
             currentStockPrice: position.current_price,
             netLiquidation: Math.abs(position.current_price * position.qty),
           };
-        })
+        }).sort((a, b) => b.pNl - a.pNl)
       : [];
   }
 
@@ -332,7 +332,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
   async getClosedTrades() {
     const orders = this.sortOrdersBySymbol(await this.fetchAllClosedOrders());
-    return this.createTradesFromOrders(orders);
+
+    return this.createTradesFromOrders(orders).sort(
+      (a, b) => b.entryTime.getTime() - a.entryTime.getTime()
+    );
   }
 
   async fetchAllClosedOrders() {
