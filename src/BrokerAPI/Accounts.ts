@@ -57,8 +57,13 @@ export class Accounts {
   }
 
   public static async getClosedTrades() {
-    return this.accounts.map(async (account) => {
-      return await account.iBrokerAPI.getClosedTrades();
-    })
+    return Promise.all(
+      this.accounts.map(async (account) => {
+        return {
+          accountName: account.name,
+          trades: await account.iBrokerAPI.getClosedTrades()
+        }
+      })
+    );
   }
 }

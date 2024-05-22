@@ -6,12 +6,16 @@ import {
 import IBrokerAPI from "./IBrokerAPI";
 import Bar from "../models/Bar";
 import { Position } from "@src/models/Position";
-import { calclautePercentagePnL } from "@src/utils/utils";
+import {
+  calclautePercentagePnL,
+  createTradeFromOrdersData,
+} from "@src/utils/utils";
 import {
   TradeType,
   convertBuyOrSellStringToTradeType,
   getTradeTypeFromString,
 } from "@src/models/TradeType";
+import { Trade } from "@src/models/Trade";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -276,7 +280,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
             ),
             dailyPnl: position.unrealized_intraday_pl,
             currentStockPrice: position.current_price,
-            netLiquidation: position.current_price * position.qty,
+            netLiquidation: Math.abs(position.current_price * position.qty),
           };
         })
       : [];
@@ -314,7 +318,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       if (value !== 0) {
         accountValuesHistory.push({
           value: value,
-          date: new Date(protofolioHistory.timestamp[index]),
+          date: new Date(protofolioHistory.timestamp[index] * 1000),
         });
       }
     });
@@ -330,7 +334,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   async fetchAllClosedOrders() {
     const fiveDaysInMilliseconds: number = 432000000;
     let allOrders = [];
-
 
     let orders = [];
     let index = 1;
@@ -354,7 +357,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       index++;
     }
 
-    return allOrders.filter((order) => order.filled_qty > 0).reverse();
+    return allOrders.filter((order) => parseInt(order.filled_qty) > 0).reverse();
   }
 
   sortOrdersBySymbol(orders: any[]) {
@@ -374,51 +377,65 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   createTradesFromOrders(orders: any[]) {
-    let currSymbol: string = orders[0].symbol;
+    const closedTrades = [];
+
+    let symbol: string = "";
     let entries: any[] = [];
     let exits: any[] = [];
     let entryQty: number = 0;
     let exitQty: number = 0;
-    let type: TradeType = null;
+    let tradeType: TradeType = null;
 
-    return orders.forEach((order, index) => {
-      if (entryQty === 0 || currSymbol != order.symbol) {
-        currSymbol = order.symbol;
-        entries.push({
+    orders.forEach((order) => {
+      const qty: number = parseInt(order.filled_qty);
+
+      if (entryQty === 0 || symbol != order.symbol) {
+        symbol = order.symbol;
+        entries = [{
           price: order.filled_avg_price,
-          qty: order.filled_qty,
+          qty: qty,
           date: order.filled_at,
-        });
-        entryQty = order.filled_qty;
-        type = convertBuyOrSellStringToTradeType(order.side);
+        }];
+        entryQty = qty;
+        tradeType = convertBuyOrSellStringToTradeType(order.side);
       } else {
-        if (convertBuyOrSellStringToTradeType(order.side) === type) {
+        if (convertBuyOrSellStringToTradeType(order.side) === tradeType) {
           entries.push({
             price: order.filled_avg_price,
-            qty: order.filled_qty,
+            qty: qty,
             date: order.filled_at,
           });
-          entryQty += order.filled_qty;
+          entryQty += qty;
         } else {
           exits.push({
             price: order.filled_avg_price,
-            qty: order.filled_qty,
+            qty: qty,
             date: order.filled_at,
           });
-          exitQty += order.filled_qty;
+          exitQty += qty;
 
           if (entryQty === exitQty) {
-            //push to closed trades;
-            currSymbol = "";
+            closedTrades.push(
+              createTradeFromOrdersData(
+                symbol,
+                entries,
+                exits,
+                entryQty,
+                tradeType
+              )
+            );
+            symbol = "";
             entries = [];
             exits = [];
             entryQty = 0;
             exitQty = 0;
-            type = null;
+            tradeType = null;
           }
         }
       }
     });
+
+    return closedTrades;
   }
 
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {

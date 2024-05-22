@@ -8,6 +8,8 @@ const router = express.Router();
  */
 router.route("/positions").get(accountsContoller.getAccountsPositions);
 
-router.route("/valuesHistory").get(accountsContoller.getAccountsValuesHistory);
+router.route("/values").get(accountsContoller.getAccountsValuesHistory);
+
+router.route("/trades").get(accountsContoller.getAccountsTrades);
 
 module.exports = router;
