@@ -23,6 +23,7 @@ const main = async () => {
       return res.status(200).send('Express Typescript on Vercel')
     })
   
+    
     app.get('/ping', (req: Request, res: Response) => {
       return res.status(200).send('pong 🏓')
     })
