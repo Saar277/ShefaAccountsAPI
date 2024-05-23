@@ -1,4 +1,4 @@
-import { TradeType } from "@src/models/TradeType";
+import { TradeType } from "../models/TradeType";
 
 export const calclautePercentagePnL = (
   entryPrice: number,

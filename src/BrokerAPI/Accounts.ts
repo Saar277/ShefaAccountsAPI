@@ -1,10 +1,9 @@
 import AlpacaBrokerAPI from "./AlpacaBrokerAPI";
 import IBrokerAPI from "./IBrokerAPI";
 import { accountsInfo } from "../env";
-import { Position } from "@src/models/Position";
-import { TradeType } from "@src/models/TradeType";
-import Statistics from "@src/models/Statistics";
-import e from "express";
+import { Position } from "../models/Position";
+import { TradeType } from "../models/TradeType";
+import Statistics from "../models/Statistics";
 
 export class Accounts {
   private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =

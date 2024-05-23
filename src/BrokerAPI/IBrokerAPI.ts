@@ -1,5 +1,5 @@
 import Bar from "../models/Bar";
-import { Position } from "@src/models/Position";
+import { Position } from "../models/Position";
 
 interface IBrokerAPI {
   connect(): void;

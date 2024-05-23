@@ -1,4 +1,4 @@
-import { Accounts } from "@src/BrokerAPI/Accounts";
+import { Accounts } from '../../../BrokerAPI/Accounts';
 import { Request, Response } from "express";
 
 /**

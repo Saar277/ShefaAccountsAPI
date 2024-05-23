@@ -5,16 +5,16 @@ import {
 } from "@alpacahq/alpaca-trade-api/dist/resources/datav2/entityv2";
 import IBrokerAPI from "./IBrokerAPI";
 import Bar from "../models/Bar";
-import { Position } from "@src/models/Position";
+import { Position } from "../models/Position";
 import {
   calclautePercentagePnL,
   createTradeFromOrdersData,
-} from "@src/utils/utils";
+} from "../utils/utils";
 import {
   TradeType,
   convertBuyOrSellStringToTradeType,
   getTradeTypeFromString,
-} from "@src/models/TradeType";
+} from "../models/TradeType";
 import { uniq } from "lodash";
 import moment from "moment-timezone";
 
