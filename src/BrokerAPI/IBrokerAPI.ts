@@ -62,6 +62,8 @@ interface IBrokerAPI {
   getDateInApiFormat(date: Date): string;
   isClockOpen(): Promise<boolean>;
   closePosition(symbol: string): void;
+  getAllOrdersSymbols(): Promise<string[]>;
+  getOrdersBySymbol(symbol: string);
 }
 
 export default IBrokerAPI;

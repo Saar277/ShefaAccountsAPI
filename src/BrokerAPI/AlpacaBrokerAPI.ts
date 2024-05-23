@@ -15,7 +15,8 @@ import {
   convertBuyOrSellStringToTradeType,
   getTradeTypeFromString,
 } from "@src/models/TradeType";
-import { Trade } from "@src/models/Trade";
+import { uniq } from "lodash";
+import moment from "moment-timezone";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -268,25 +269,27 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     const positions = await this.alpaca.getPositions();
 
     return positions.length !== 0
-      ? positions.map((position) => {
-          const tradeType: TradeType = getTradeTypeFromString(position.side);
+      ? positions
+          .map((position) => {
+            const tradeType: TradeType = getTradeTypeFromString(position.side);
 
-          return {
-            symbol: position.symbol,
-            type: tradeType,
-            qty: position.qty,
-            entryPrice: position.avg_entry_price,
-            pNl: position.unrealized_pl,
-            percentPnL: calclautePercentagePnL(
-              position.avg_entry_price,
-              position.current_price,
-              tradeType
-            ),
-            dailyPnl: position.unrealized_intraday_pl,
-            currentStockPrice: position.current_price,
-            netLiquidation: Math.abs(position.current_price * position.qty),
-          };
-        }).sort((a, b) => b.pNl - a.pNl)
+            return {
+              symbol: position.symbol,
+              type: tradeType,
+              qty: position.qty,
+              entryPrice: position.avg_entry_price,
+              pNl: position.unrealized_pl,
+              percentPnL: calclautePercentagePnL(
+                position.avg_entry_price,
+                position.current_price,
+                tradeType
+              ),
+              dailyPnl: position.unrealized_intraday_pl,
+              currentStockPrice: position.current_price,
+              netLiquidation: Math.abs(position.current_price * position.qty),
+            };
+          })
+          .sort((a, b) => b.pNl - a.pNl)
       : [];
   }
 
@@ -338,8 +341,8 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     );
   }
 
-  async fetchAllClosedOrders() {
-    const fiveDaysInMilliseconds: number = 432000000;
+  async fetchAllClosedOrders(symbol?: string) {
+    const fiveDaysInMilliseconds: number = 864000000;
     let allOrders = [];
 
     let orders = [];
@@ -357,7 +360,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         ).toISOString(),
         direction: "desc",
         nested: "false",
-        symbols: "",
+        symbols: symbol !== undefined ? symbol : "",
       });
 
       allOrders = allOrders.concat(orders);
@@ -449,13 +452,30 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return closedTrades;
   }
 
+  async getAllOrdersSymbols(): Promise<string[]> {
+    return uniq(
+      (await this.fetchAllClosedOrders()).map((order) => order.symbol)
+    );
+  }
+
+  async getOrdersBySymbol(symbol: string) {
+    return (await this.fetchAllClosedOrders(symbol)).map((order) => {
+      return {
+        price: parseFloat(order.filled_avg_price),
+        qty: parseFloat(order.qty),
+        date: new Date(order.filled_at),
+        type: order.side,
+      };
+    });
+  }
+
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {
     return bars.map((bar) => ({
       openPrice: bar.OpenPrice,
       closePrice: bar.ClosePrice,
       highPrice: bar.HighPrice,
       lowPrice: bar.LowPrice,
-      time: new Date(bar.Timestamp), //TODO: CHECK IF WORKING
+      time: this.convertApiDateFormatToJSDate(bar.Timestamp),
     }));
   }
 
@@ -480,6 +500,18 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     day = day.length == 1 ? `0${day}` : day;
 
     return [year, month, day].join("-");
+  }
+
+  public convertApiDateFormatToJSDate(dateString: string): Date {
+    const dateInNewYork = moment.tz(
+      dateString,
+      "DD/MM/YYYY, HH:mm:ss",
+      "America/New_York"
+    );
+
+    const utcString = dateInNewYork.utc().format("YYYY-MM-DDTHH:mm:ss") + "Z";
+
+    return new Date(utcString);
   }
 
   public async isClockOpen(): Promise<boolean> {
@@ -508,6 +540,20 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       targetTimeInMinutes >= startTimeInMinutes &&
       targetTimeInMinutes <= endTimeInMinutes
     );
+  }
+
+  getTimeFrameFromString(str: string): TimeFrameUnit {
+    if (str === "Day") {
+      return TimeFrameUnit.DAY;
+    } else if (str === "Hour") {
+      return TimeFrameUnit.HOUR;
+    } else if (str === "Min") {
+      return TimeFrameUnit.MIN;
+    } else if (str === "Month") {
+      return TimeFrameUnit.MONTH;
+    } else if (str === "Week") {
+      return TimeFrameUnit.WEEK;
+    }
   }
 }
 

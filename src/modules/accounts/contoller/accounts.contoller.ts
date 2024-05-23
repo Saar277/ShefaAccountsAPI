@@ -45,5 +45,30 @@ class AccountsController {
       res.status(500).send();
     }
   };
+
+  getAccountsOrdersSymbols = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountsOrdersSymbols());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountsNames = (req: Request, res: Response) => {
+    try {
+      res.status(200).send(Accounts.getAccountsNames());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getBarsWithOrders = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
+    } catch {
+      res.status(500).send();
+    }
+  };
 }
+
 export default new AccountsController();

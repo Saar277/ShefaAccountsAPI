@@ -4,6 +4,7 @@ import { accountsInfo } from "../env";
 import { Position } from "@src/models/Position";
 import { TradeType } from "@src/models/TradeType";
 import Statistics from "@src/models/Statistics";
+import e from "express";
 
 export class Accounts {
   private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =
@@ -140,5 +141,38 @@ export class Accounts {
     losingTrades.forEach((trade) => (sum += trade.pNl));
 
     return Math.abs(sum) / losingTrades.length;
+  }
+
+  public static getAccountsOrdersSymbols() {
+    return Promise.all(
+      this.accounts.map(async (account) => {
+        return {
+          accountName: account.name,
+          symbols: await account.iBrokerAPI.getAllOrdersSymbols(),
+        };
+      })
+    );
+  }
+
+  public static getAccountsNames() {
+    return this.accounts.map(account => account.name);
+  }
+
+  public static async getBarsWithOrders(accountName: string, symbol: string, timeFrame: number, timeFrameUnit: string) {
+    try {
+      const account = this.accounts.find(account => account.name === accountName);
+      const orders = await account.iBrokerAPI.getOrdersBySymbol(symbol);
+  
+      const fiveDaysInMilliseconds: number = 432000000;
+      const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
+      const bars = await account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
+
+      return {
+        orders: orders,
+        bars: bars
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

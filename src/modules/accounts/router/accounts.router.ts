@@ -16,4 +16,10 @@ router
   .route("/statistics/:accountName")
   .get(accountsContoller.getAccountStatistics);
 
+router.route("/symbols").get(accountsContoller.getAccountsOrdersSymbols);
+
+router.route("/names").get(accountsContoller.getAccountsNames);
+
+router.route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit").get(accountsContoller.getBarsWithOrders);
+
 module.exports = router;
