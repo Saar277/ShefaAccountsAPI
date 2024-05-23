@@ -19,6 +19,7 @@ const main = async () => {
     //routes
     app.use("/accounts", accountsRoute);
 
+    
     app.get('/', (req: Request, res: Response) => {
       return res.status(200).send('Express Typescript on Vercel')
     })
