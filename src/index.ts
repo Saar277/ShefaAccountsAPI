@@ -7,7 +7,7 @@ const accountsRoute = require("./modules/accounts/router/accounts.router");
 import { Request, Response } from "express";
 
 const app = express();
-const port = 8082;
+const port = 3000;
 
 const main = async () => {
   try {
