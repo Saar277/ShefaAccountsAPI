@@ -4,9 +4,10 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const accountsRoute = require("./modules/accounts/router/accounts.router");
+import { Request, Response } from "express";
 
 const app = express();
-const port = 3000;
+const port = 8082;
 
 const main = async () => {
   try {
@@ -17,6 +18,14 @@ const main = async () => {
 
     //routes
     app.use("/accounts", accountsRoute);
+
+    app.get('/', (req: Request, res: Response) => {
+      return res.status(200).send('Express Typescript on Vercel')
+    })
+  
+    app.get('/ping', (req: Request, res: Response) => {
+      return res.status(200).send('pong 🏓')
+    })
 
 
     // listen
