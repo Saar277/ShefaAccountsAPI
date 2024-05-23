@@ -35,8 +35,8 @@
     },
     "scripts": {
         "nodemon": "nodemon -r dotenv/config src/index.ts",
-        "start": "ts-node -r tsconfig-paths/register ./src/index.ts",
-        "master": "node dist/index.js",
+        "master": "ts-node -r tsconfig-paths/register ./src/index.ts",
+        "start": "node dist/index.js",
         "typeorm": "typeorm-ts-node-commonjs",
         "build": "tsc"
     }
