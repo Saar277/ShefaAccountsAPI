@@ -367,7 +367,9 @@ class AlpacaBrokerAPI {
                         date: order.filled_at,
                     },
                 ];
+                exits = [];
                 entryQty = qty;
+                exitQty = 0;
                 tradeType = (0, TradeType_1.convertBuyOrSellStringToTradeType)(order.side);
             }
             else {
