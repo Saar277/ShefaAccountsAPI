@@ -270,7 +270,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
     return positions.length !== 0
       ? positions
-          .map((position) => {
+          .map((position: { side: string; symbol: any; qty: number; avg_entry_price: number; unrealized_pl: any; current_price: number; unrealized_intraday_pl: any; }) => {
             const tradeType: TradeType = getTradeTypeFromString(position.side);
 
             return {
@@ -289,7 +289,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
               netLiquidation: Math.abs(position.current_price * position.qty),
             };
           })
-          .sort((a, b) => b.pNl - a.pNl)
+          .sort((a: { pNl: number; }, b: { pNl: number; }) => b.pNl - a.pNl)
       : [];
   }
 
@@ -343,7 +343,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
   async fetchAllClosedOrders(symbol?: string) {
     const fiveDaysInMilliseconds: number = 864000000;
-    let allOrders = [];
+    let allOrders: any[] = [];
 
     let orders = [];
     let index = 1;
@@ -389,7 +389,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   createTradesFromOrders(orders: any[]) {
-    const closedTrades = [];
+    const closedTrades: { symbol: string; type: TradeType; qty: number; entryPrice: number; entryTime: Date; pNl: number; percentPnL: number; closePrice: number; closeTime: Date; entries: any[]; exits: any[]; }[] = [];
 
     let symbol: string = "";
     let entries: any[] = [];

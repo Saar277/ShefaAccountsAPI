@@ -98,12 +98,12 @@ export class Accounts {
     const moneyAmount: number = await this.getMoneyAmount(accountName);
     const pNl: number = moneyAmount - startMoneyAmount;
 
-    const winningTrades = trades.filter((trade) => trade.pNl > 0);
+    const winningTrades = trades.filter((trade: { pNl: number; }) => trade.pNl > 0);
     const avgWinningTrade: number = this.getAvgWinningTrade(winningTrades);
     const avgLosingTrade: number = this.getAvgLosingTrade(trades);
 
     const longTradesPrecentage: number =
-      (trades.filter((trade) => trade.type === TradeType.LONG).length /
+      (trades.filter((trade: { type: TradeType; }) => trade.type === TradeType.LONG).length /
         trades.length) *
       100;
 
@@ -118,14 +118,14 @@ export class Accounts {
       avgWinningTrade: avgWinningTrade,
       avgLosingTrade: avgLosingTrade,
       ratio: avgWinningTrade / avgLosingTrade,
-      largestWinningTrade: Math.max(...trades.map((trade) => trade.pNl)),
-      largestLosingTrade: Math.min(...trades.map((trade) => trade.pNl)),
+      largestWinningTrade: Math.max(...trades.map((trade: { pNl: any; }) => trade.pNl)),
+      largestLosingTrade: Math.min(...trades.map((trade: { pNl: any; }) => trade.pNl)),
       longPrecentage: longTradesPrecentage,
       shortPrecentage: 100 - longTradesPrecentage,
     };
   }
 
-  private static getAvgWinningTrade(winningTrades): number {
+  private static getAvgWinningTrade(winningTrades: any[]): number {
     let sum = 0;
     winningTrades.forEach((trade) => {
       sum += trade.pNl;
@@ -134,7 +134,7 @@ export class Accounts {
     return sum / winningTrades.length;
   }
 
-  private static getAvgLosingTrade(trades): number {
+  private static getAvgLosingTrade(trades: any[]): number {
     const losingTrades = trades.filter((trade) => trade.pNl < 0);
     let sum = 0;
     losingTrades.forEach((trade) => (sum += trade.pNl));
