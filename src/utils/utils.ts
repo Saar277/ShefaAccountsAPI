@@ -58,6 +58,6 @@ export const createTradeFromOrdersData = (
     closePrice: closePrice,
     closeTime: new Date(exits[exits.length - 1].date),
     entries: entries,
-    exits: exits,
+    exits: exits
   };
 };

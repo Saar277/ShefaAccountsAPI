@@ -1,0 +1,42 @@
+QUERIES:
+
+get accounts positions:
+route: /accounts/positions
+return: { accountName: string; positions: Position[] }[]
+
+get accounts values history:
+route: /accounts/values
+return: 
+{
+  accountName: string;
+  accountValuesHistory: {
+    value: number;
+    date: Date;
+  }[];
+}[]
+
+get accounts closed trades:
+route: /accounts/trades
+return:
+{
+  accountName: string;
+  trades: {
+    symbol: string,
+    type: tradeType,
+    qty: number,
+    entryPrice: number,
+    entryTime: string (repesents Date)
+    pNl: number,
+    percentPnL: number,
+    closePrice: number,
+    closeTime: string (repesents Date),
+    entries: {price: number; qty: number; date: string (repesents Date)}[],
+    exits: {price: number; qty: number; date: string (repesents Date)}[]
+  }[]
+}
+
+get account statistics:
+route: /accounts/statistics/:accountName #(in accountName write the name of the account you want)
+return: Statistics
+
+get accounts orders symbols: #the symbols every account did orders in
