@@ -410,7 +410,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
             date: order.filled_at,
           },
         ];
+        exits = []
         entryQty = qty;
+        exitQty = 0;
         tradeType = convertBuyOrSellStringToTradeType(order.side);
       } else {
         if (convertBuyOrSellStringToTradeType(order.side) === tradeType) {
