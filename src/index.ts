@@ -20,14 +20,8 @@ const main = async () => {
     app.use("/accounts", accountsRoute);
 
     app.get('/', (req: Request, res: Response) => {
-      return res.status(200).send('Express Typescript on Vercel - update1')
+      return res.status(200).send('Express Typescript on Vercel - working')
     })
-  
-    
-    app.get('/ping', (req: Request, res: Response) => {
-      return res.status(200).send('pong 🏓')
-    })
-
 
     // listen
     app.listen(port, () => {

@@ -24,10 +24,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         //routes
         app.use("/accounts", accountsRoute);
         app.get('/', (req, res) => {
-            return res.status(200).send('Express Typescript on Vercel - update1');
-        });
-        app.get('/ping', (req, res) => {
-            return res.status(200).send('pong 🏓');
+            return res.status(200).send('Express Typescript on Vercel - working');
         });
         // listen
         app.listen(port, () => {
