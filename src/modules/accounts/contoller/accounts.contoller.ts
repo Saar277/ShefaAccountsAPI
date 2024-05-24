@@ -1,4 +1,4 @@
-import { Accounts } from '../../../BrokerAPI/Accounts';
+import { Accounts } from "../../../BrokerAPI/Accounts";
 import { Request, Response } from "express";
 
 /**
@@ -64,7 +64,16 @@ class AccountsController {
 
   getBarsWithOrders = async (req: Request, res: Response) => {
     try {
-      res.status(200).send(await Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
+      res
+        .status(200)
+        .send(
+          await Accounts.getBarsWithOrders(
+            req.params.accountName,
+            req.params.symbol,
+            parseInt(req.params.timeFrame),
+            req.params.TimeFrameUnit
+          )
+        );
     } catch {
       res.status(500).send();
     }
