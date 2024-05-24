@@ -312,7 +312,7 @@ class AlpacaBrokerAPI {
     }
     fetchAllClosedOrders(symbol) {
         return __awaiter(this, void 0, void 0, function* () {
-            const fiveDaysInMilliseconds = 864000000;
+            const thirtyDaysInMilliseconds = 2592000000;
             let allOrders = [];
             let orders = [];
             let index = 1;
@@ -320,8 +320,8 @@ class AlpacaBrokerAPI {
                 orders = yield this.alpaca.getOrders({
                     status: "closed",
                     limit: 500,
-                    after: new Date(new Date().getTime() - fiveDaysInMilliseconds * index).toISOString(),
-                    until: new Date(new Date().getTime() - fiveDaysInMilliseconds * (index - 1)).toISOString(),
+                    after: new Date(new Date().getTime() - thirtyDaysInMilliseconds * index).toISOString(),
+                    until: new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)).toISOString(),
                     direction: "desc",
                     nested: "false",
                     symbols: symbol !== undefined ? symbol : "",

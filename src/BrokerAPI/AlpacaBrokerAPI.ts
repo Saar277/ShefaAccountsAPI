@@ -342,7 +342,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   async fetchAllClosedOrders(symbol?: string) {
-    const fiveDaysInMilliseconds: number = 864000000;
+    const thirtyDaysInMilliseconds: number = 2592000000;
     let allOrders: any[] = [];
 
     let orders = [];
@@ -353,10 +353,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         status: "closed",
         limit: 500, //the limit of the api,
         after: new Date(
-          new Date().getTime() - fiveDaysInMilliseconds * index
+          new Date().getTime() - thirtyDaysInMilliseconds * index
         ).toISOString(),
         until: new Date(
-          new Date().getTime() - fiveDaysInMilliseconds * (index - 1)
+          new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)
         ).toISOString(),
         direction: "desc",
         nested: "false",
