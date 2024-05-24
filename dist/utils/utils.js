@@ -36,7 +36,7 @@ const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType) => {
         closePrice: closePrice,
         closeTime: new Date(exits[exits.length - 1].date),
         entries: entries,
-        exits: exits,
+        exits: exits
     };
 };
 exports.createTradeFromOrdersData = createTradeFromOrdersData;

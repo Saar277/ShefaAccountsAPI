@@ -72,7 +72,9 @@ class AccountsController {
         };
         this.getBarsWithOrders = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                res.status(200).send(yield Accounts_1.Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
             }
             catch (_f) {
                 res.status(500).send();
