@@ -15,6 +15,17 @@ return:
   }[];
 }[]
 
+get account values history by accountName:
+route: /values/:accountName
+return: 
+{
+  accountName: string;
+  accountValuesHistory: {
+    value: number;
+    date: Date;
+  }[];
+}
+
 get accounts closed trades:
 route: /accounts/trades
 return:
@@ -34,6 +45,23 @@ return:
     exits: {price: number; qty: number; date: string (repesents Date)}[]
   }[]
 }
+
+get account closed trades by accountName:
+route: /accounts/trades/:accountName
+return:
+trades: {
+    symbol: string,
+    type: TradeType,
+    qty: number,
+    entryPrice: number,
+    entryTime: string (repesents Date)
+    pNl: number,
+    percentPnL: number,
+    closePrice: number,
+    closeTime: string (repesents Date),
+    entries: {price: number; qty: number; date: string (repesents Date)}[],
+    exits: {price: number; qty: number; date: string (repesents Date)}[]
+  }[]
 
 get account statistics:
 route: /accounts/statistics/:accountName #(in accountName write the name of the account you want)

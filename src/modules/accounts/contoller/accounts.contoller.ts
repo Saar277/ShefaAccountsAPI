@@ -20,7 +20,15 @@ class AccountsController {
 
   getAccountsValuesHistory = async (req: Request, res: Response) => {
     try {
-      res.status(200).send(await Accounts.getAccountValuesHistory());
+      res.status(200).send(await Accounts.getAccountsValuesHistory());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountValuesHistory = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountValuesHistory(req.params.accountName));
     } catch {
       res.status(500).send();
     }
@@ -29,6 +37,14 @@ class AccountsController {
   getAccountsTrades = async (req: Request, res: Response) => {
     try {
       res.status(200).send(await Accounts.getClosedTrades());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountTrades = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getClosedTradesForAccount(req.params.accountName));
     } catch {
       res.status(500).send();
     }

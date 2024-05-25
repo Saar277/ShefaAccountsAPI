@@ -10,7 +10,11 @@ router.route("/positions").get(accountsContoller.getAccountsPositions);
 
 router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
+router.route("/values/:accountName").get(accountsContoller.getAccountValuesHistory);
+
 router.route("/trades").get(accountsContoller.getAccountsTrades);
+
+router.route("/trades/:accountName").get(accountsContoller.getAccountTrades);
 
 router
   .route("/statistics/:accountName")

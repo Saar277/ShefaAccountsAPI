@@ -38,7 +38,7 @@ export class Accounts {
     );
   }
 
-  public static async getAccountValuesHistory(): Promise<
+  public static async getAccountsValuesHistory(): Promise<
     {
       accountName: string;
       accountValuesHistory: {
@@ -58,6 +58,14 @@ export class Accounts {
     );
   }
 
+  public static async getAccountValuesHistory(
+    accountName: string
+  ): Promise<{ value: number; date: Date }[]> {
+    return await this.accounts
+      .find((account) => account.name === accountName)
+      .iBrokerAPI.getAccountValuesHistory();
+  }
+
   public static async getClosedTrades() {
     return Promise.all(
       this.accounts.map(async (account) => {
@@ -67,6 +75,12 @@ export class Accounts {
         };
       })
     );
+  }
+
+  public static async getClosedTradesForAccount(accountName: string) {
+    return await this.accounts
+      .find((account) => account.name === accountName)
+      .iBrokerAPI.getClosedTrades();
   }
 
   private static async getStartMoneyAmount(
@@ -98,12 +112,16 @@ export class Accounts {
     const moneyAmount: number = await this.getMoneyAmount(accountName);
     const pNl: number = moneyAmount - startMoneyAmount;
 
-    const winningTrades = trades.filter((trade: { pNl: number; }) => trade.pNl > 0);
+    const winningTrades = trades.filter(
+      (trade: { pNl: number }) => trade.pNl > 0
+    );
     const avgWinningTrade: number = this.getAvgWinningTrade(winningTrades);
     const avgLosingTrade: number = this.getAvgLosingTrade(trades);
 
     const longTradesPrecentage: number =
-      (trades.filter((trade: { type: TradeType; }) => trade.type === TradeType.LONG).length /
+      (trades.filter(
+        (trade: { type: TradeType }) => trade.type === TradeType.LONG
+      ).length /
         trades.length) *
       100;
 
@@ -118,8 +136,12 @@ export class Accounts {
       avgWinningTrade: avgWinningTrade,
       avgLosingTrade: avgLosingTrade,
       ratio: avgWinningTrade / avgLosingTrade,
-      largestWinningTrade: Math.max(...trades.map((trade: { pNl: any; }) => trade.pNl)),
-      largestLosingTrade: Math.min(...trades.map((trade: { pNl: any; }) => trade.pNl)),
+      largestWinningTrade: Math.max(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
+      largestLosingTrade: Math.min(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
       longPrecentage: longTradesPrecentage,
       shortPrecentage: 100 - longTradesPrecentage,
     };
@@ -154,22 +176,37 @@ export class Accounts {
   }
 
   public static getAccountsNames() {
-    return this.accounts.map(account => account.name);
+    return this.accounts.map((account) => account.name);
   }
 
-  public static async getBarsWithOrders(accountName: string, symbol: string, timeFrame: number, timeFrameUnit: string) {
+  public static async getBarsWithOrders(
+    accountName: string,
+    symbol: string,
+    timeFrame: number,
+    timeFrameUnit: string
+  ) {
     try {
-      const account = this.accounts.find(account => account.name === accountName);
+      const account = this.accounts.find(
+        (account) => account.name === accountName
+      );
       const orders = await account.iBrokerAPI.getOrdersBySymbol(symbol);
-  
+
       const fiveDaysInMilliseconds: number = 432000000;
-      const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
-      const bars = await account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
+      const startDate = new Date(
+        orders[0].date.getTime() - fiveDaysInMilliseconds
+      ).toISOString();
+      const bars = await account.iBrokerAPI.getBars(
+        symbol,
+        timeFrame,
+        timeFrameUnit,
+        true,
+        startDate
+      );
 
       return {
         orders: orders,
-        bars: bars
-      }
+        bars: bars,
+      };
     } catch (error) {
       console.log(error);
     }
