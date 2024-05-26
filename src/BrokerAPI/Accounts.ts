@@ -4,6 +4,7 @@ import { accountsInfo } from "../env";
 import { Position } from "../models/Position";
 import { TradeType } from "../models/TradeType";
 import Statistics from "../models/Statistics";
+import { mapAccountValueInDateToPnlInEveryMonth, mapAccountValueInDateToPnlInEveryYear } from "../utils/utils";
 
 export class Accounts {
   private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =
@@ -83,6 +84,19 @@ export class Accounts {
         valueInDateMilliseconds <= endDateInMilliseconds
       );
     });
+  }
+
+  public static async getAccountPnlInEveryMonthOrYear(
+    accountName: string,
+    monthOrYear: "month" | "year" | string
+  ): Promise<{ date: Date; pNl: number }[]> {
+    const accountValuesInDates = await this.accounts
+      .find((account) => account.name === accountName)
+      .iBrokerAPI.getAccountValuesHistory();
+
+    return monthOrYear === "month"
+      ? mapAccountValueInDateToPnlInEveryMonth(accountValuesInDates)
+      : mapAccountValueInDateToPnlInEveryYear(accountValuesInDates);
   }
 
   public static async getClosedTrades() {

@@ -28,4 +28,6 @@ router.route("/names").get(accountsContoller.getAccountsNames);
 
 router.route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit").get(accountsContoller.getBarsWithOrders);
 
+router.route("/pNl/:accountName/:monthOrYear").get(accountsContoller.getAccountPnlInEveryMonthOrYear);
+
 module.exports = router;

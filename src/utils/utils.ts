@@ -58,6 +58,68 @@ export const createTradeFromOrdersData = (
     closePrice: closePrice,
     closeTime: new Date(exits[exits.length - 1].date),
     entries: entries,
-    exits: exits
+    exits: exits,
   };
+};
+
+export const mapAccountValueInDateToPnlInEveryMonth = (
+  accountValuesInDates: { value: number; date: Date }[]
+) => {
+  return Object.values(
+    accountValuesInDates.reduce((acc: any, obj: any) => {
+      // Extract the month and year from the date
+      const date = new Date(obj.date);
+      const month = date.getMonth(); // Months are 0-indexed
+      const year = date.getFullYear();
+      const monthYear: string = `${year}-${month + 1}`; // Create a string to represent the month and year
+
+      // If the monthYear key doesn't exist, create an array for it
+      if (!acc[monthYear]) {
+        acc[monthYear] = [];
+      }
+
+      // Add the object to the respective monthYear array
+      acc[monthYear].push(obj);
+
+      return acc;
+    }, {})
+  ).map((array: any) => {
+    const firstValueInMonth = array[0].value;
+    const lastValueInMonth = array[array.length - 1].value;
+
+    return {
+      date: array[0].date,
+      pNl: lastValueInMonth - firstValueInMonth,
+    };
+  });
+};
+
+export const mapAccountValueInDateToPnlInEveryYear = (
+  accountValuesInDates: { value: number; date: Date }[]
+) => {
+  return Object.values(
+    accountValuesInDates.reduce((acc: any, obj: any) => {
+      // Extract the year from the date
+      const date = new Date(obj.date);
+      const year = date.getFullYear();
+
+      // If the year key doesn't exist, create an array for it
+      if (!acc[year]) {
+        acc[year] = [];
+      }
+
+      // Add the object to the respective year array
+      acc[year].push(obj);
+
+      return acc;
+    }, {})
+  ).map((array: any) => {
+    const firstValueInYear = array[0].value;
+    const lastValueInYear = array[array.length - 1].value;
+
+    return {
+      date: array[0].date,
+      pNl: lastValueInYear - firstValueInYear,
+    };
+  });
 };

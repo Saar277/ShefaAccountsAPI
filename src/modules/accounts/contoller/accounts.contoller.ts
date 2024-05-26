@@ -114,6 +114,21 @@ class AccountsController {
       res.status(500).send();
     }
   };
+
+  getAccountPnlInEveryMonthOrYear = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountPnlInEveryMonthOrYear(
+            req.params.accountName,
+            req.params.monthOrYear,
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
 }
 
 export default new AccountsController();
