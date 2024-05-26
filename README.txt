@@ -89,6 +89,10 @@ return:
   symbols: string[];
 }[]
 
+get account orders symbols: #the symbols the account did orders in
+route: /accounts/symbols/:accountName
+return: string[];
+
 get accounts names:
 route: /accounts/names
 return: string[]
