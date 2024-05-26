@@ -26,6 +26,14 @@ return:
   }[];
 }
 
+get get Account Values History In DatesRange:
+route: /values/:accountName/:startDate/:endDate
+the startDate and endDate needs to be in milliseconds.
+return {
+  value: number,
+  date: Date
+}[]
+
 get accounts closed trades:
 route: /accounts/trades
 return:
@@ -97,6 +105,14 @@ return:
     lowPrice: number,
     time: Date
   }[];
+}
+
+get AccountPnl In Every Month Or Year:
+route: /pNl/:accountName/:monthOrYear
+in monthOrYear you need to write month or year
+return {
+  date: Date,
+  pNl: number
 }
 
 MODELS: #(maybe this model changed. it is better to see the models in /src/models)
