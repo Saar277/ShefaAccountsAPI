@@ -66,6 +66,25 @@ export class Accounts {
       .iBrokerAPI.getAccountValuesHistory();
   }
 
+  public static async getAccountValuesHistoryInDatesRange(
+    accountName: string,
+    startDateInMilliseconds: number,
+    endDateInMilliseconds: number
+  ): Promise<{ value: number; date: Date }[]> {
+    return (
+      await this.accounts
+        .find((account) => account.name === accountName)
+        .iBrokerAPI.getAccountValuesHistory()
+    ).filter((valueInDate) => {
+      const valueInDateMilliseconds = valueInDate.date.getTime();
+
+      return (
+        valueInDateMilliseconds >= startDateInMilliseconds &&
+        valueInDateMilliseconds <= endDateInMilliseconds
+      );
+    });
+  }
+
   public static async getClosedTrades() {
     return Promise.all(
       this.accounts.map(async (account) => {

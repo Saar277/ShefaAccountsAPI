@@ -12,6 +12,8 @@ router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
 router.route("/values/:accountName").get(accountsContoller.getAccountValuesHistory);
 
+router.route("/values/:accountName/:startDate/:endDate").get(accountsContoller.getAccountValuesHistoryInDates);
+
 router.route("/trades").get(accountsContoller.getAccountsTrades);
 
 router.route("/trades/:accountName").get(accountsContoller.getAccountTrades);
