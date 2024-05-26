@@ -4,7 +4,12 @@ import { accountsInfo } from "../env";
 import { Position } from "../models/Position";
 import { TradeType } from "../models/TradeType";
 import Statistics from "../models/Statistics";
-import { mapAccountValueInDateToPnlInEveryMonth, mapAccountValueInDateToPnlInEveryYear } from "../utils/utils";
+import {
+  mapAccountValueInDateToPnlInEveryMonth,
+  mapAccountValueInDateToPnlInEveryYear,
+  filterTradesByTimeRange,
+} from "../utils/utils";
+import e from "express";
 
 export class Accounts {
   private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =
@@ -143,6 +148,63 @@ export class Accounts {
       accountName
     );
     const moneyAmount: number = await this.getMoneyAmount(accountName);
+    const pNl: number = moneyAmount - startMoneyAmount;
+
+    const winningTrades = trades.filter(
+      (trade: { pNl: number }) => trade.pNl > 0
+    );
+    const avgWinningTrade: number = this.getAvgWinningTrade(winningTrades);
+    const avgLosingTrade: number = this.getAvgLosingTrade(trades);
+
+    const longTradesPrecentage: number =
+      (trades.filter(
+        (trade: { type: TradeType }) => trade.type === TradeType.LONG
+      ).length /
+        trades.length) *
+      100;
+
+    return {
+      startMoneyAmount: startMoneyAmount,
+      moneyAmount: moneyAmount,
+      pNl: pNl,
+      percentPNl: (pNl / startMoneyAmount) * 100,
+      winningTradesCount: winningTrades.length,
+      losingTradesCount: trades.length - winningTrades.length,
+      successRate: (winningTrades.length / trades.length) * 100,
+      avgWinningTrade: avgWinningTrade,
+      avgLosingTrade: avgLosingTrade,
+      ratio: avgWinningTrade / avgLosingTrade,
+      largestWinningTrade: Math.max(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
+      largestLosingTrade: Math.min(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
+      longPrecentage: longTradesPrecentage,
+      shortPrecentage: 100 - longTradesPrecentage,
+    };
+  }
+
+  public static async getAccountTradesStatisticsInTimeRange(
+    accountName: string,
+    startDateInMilliseconds: number,
+    endDateInMilliseconds: number
+  ): Promise<Statistics> {
+    const trades = filterTradesByTimeRange(
+      await this.accounts
+        .find((account) => account.name === accountName)
+        .iBrokerAPI.getClosedTrades(),
+      startDateInMilliseconds,
+      endDateInMilliseconds
+    );
+
+    const valuesHistory = await this.getAccountValuesHistoryInDatesRange(
+      accountName,
+      startDateInMilliseconds,
+      endDateInMilliseconds
+    );
+    const startMoneyAmount: number = valuesHistory[0].value;
+    const moneyAmount: number = valuesHistory[valuesHistory.length - 1].value;
     const pNl: number = moneyAmount - startMoneyAmount;
 
     const winningTrades = trades.filter(

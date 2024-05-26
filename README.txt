@@ -75,6 +75,12 @@ get account statistics:
 route: /accounts/statistics/:accountName #(in accountName write the name of the account you want)
 return: Statistics
 
+get account statistics in time range:
+route: /accounts/statistics/:accountName/:startDate/:endDate
+# in accountName write the name of the account you want
+# startDate and endDate needs to be milliseconds
+return: Statistics
+
 get accounts orders symbols: #the symbols every account did orders in
 route: /accounts/symbols
 return: 

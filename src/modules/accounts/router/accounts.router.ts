@@ -10,9 +10,13 @@ router.route("/positions").get(accountsContoller.getAccountsPositions);
 
 router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
-router.route("/values/:accountName").get(accountsContoller.getAccountValuesHistory);
+router
+  .route("/values/:accountName")
+  .get(accountsContoller.getAccountValuesHistory);
 
-router.route("/values/:accountName/:startDate/:endDate").get(accountsContoller.getAccountValuesHistoryInDates);
+router
+  .route("/values/:accountName/:startDate/:endDate")
+  .get(accountsContoller.getAccountValuesHistoryInDates);
 
 router.route("/trades").get(accountsContoller.getAccountsTrades);
 
@@ -22,12 +26,20 @@ router
   .route("/statistics/:accountName")
   .get(accountsContoller.getAccountStatistics);
 
+router
+  .route("/statistics/:accountName/:startDate/:endDate")
+  .get(accountsContoller.getAccountStatisticsInTimeRange);
+
 router.route("/symbols").get(accountsContoller.getAccountsOrdersSymbols);
 
 router.route("/names").get(accountsContoller.getAccountsNames);
 
-router.route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit").get(accountsContoller.getBarsWithOrders);
+router
+  .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit")
+  .get(accountsContoller.getBarsWithOrders);
 
-router.route("/pNl/:accountName/:monthOrYear").get(accountsContoller.getAccountPnlInEveryMonthOrYear);
+router
+  .route("/pNl/:accountName/:monthOrYear")
+  .get(accountsContoller.getAccountPnlInEveryMonthOrYear);
 
 module.exports = router;

@@ -82,6 +82,22 @@ class AccountsController {
     }
   };
 
+  getAccountStatisticsInTimeRange = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountTradesStatisticsInTimeRange(
+            req.params.accountName,
+            parseInt(req.params.startDate),
+            parseInt(req.params.endDate)
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
+
   getAccountsOrdersSymbols = async (req: Request, res: Response) => {
     try {
       res.status(200).send(await Accounts.getAccountsOrdersSymbols());
@@ -122,7 +138,7 @@ class AccountsController {
         .send(
           await Accounts.getAccountPnlInEveryMonthOrYear(
             req.params.accountName,
-            req.params.monthOrYear,
+            req.params.monthOrYear
           )
         );
     } catch {

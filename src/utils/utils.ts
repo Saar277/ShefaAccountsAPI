@@ -123,3 +123,15 @@ export const mapAccountValueInDateToPnlInEveryYear = (
     };
   });
 };
+
+export const filterTradesByTimeRange = (
+  trades: any,
+  startDateInMilliseconds: number,
+  endDateInMilliseconds: number
+) => {
+  return trades.filter(
+    (trade: any) =>
+      trade.closeTime.getTime() >= startDateInMilliseconds &&
+      trade.closeTime.getTime() <= endDateInMilliseconds
+  );
+};
