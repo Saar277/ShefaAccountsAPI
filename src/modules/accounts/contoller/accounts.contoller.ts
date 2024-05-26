@@ -106,6 +106,14 @@ class AccountsController {
     }
   };
 
+  getAccountOrdersSymbols = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountOrdersSymbols(req.params.accountName));
+    } catch {
+      res.status(500).send();
+    }
+  };
+
   getAccountsNames = (req: Request, res: Response) => {
     try {
       res.status(200).send(Accounts.getAccountsNames());

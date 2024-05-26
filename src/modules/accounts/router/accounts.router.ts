@@ -32,6 +32,8 @@ router
 
 router.route("/symbols").get(accountsContoller.getAccountsOrdersSymbols);
 
+router.route("/symbols/:accountName").get(accountsContoller.getAccountOrdersSymbols);
+
 router.route("/names").get(accountsContoller.getAccountsNames);
 
 router

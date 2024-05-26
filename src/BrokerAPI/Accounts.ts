@@ -270,6 +270,12 @@ export class Accounts {
     );
   }
 
+  public static async getAccountOrdersSymbols(accountName: string) {
+    return await this.accounts
+      .find((account) => account.name === accountName)
+      .iBrokerAPI.getAllOrdersSymbols();
+  }
+
   public static getAccountsNames() {
     return this.accounts.map((account) => account.name);
   }
