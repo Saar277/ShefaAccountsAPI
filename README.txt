@@ -34,6 +34,14 @@ return {
   date: Date
 }[]
 
+get AccountPnl In Every Month Or Year:
+route: /pNl/:accountName/:monthOrYear
+in monthOrYear you need to write month or year
+return {
+  date: Date,
+  pNl: number
+}
+
 get accounts closed trades:
 route: /accounts/trades
 return:
@@ -117,12 +125,28 @@ return:
   }[];
 }
 
-get AccountPnl In Every Month Or Year:
-route: /pNl/:accountName/:monthOrYear
-in monthOrYear you need to write month or year
-return {
-  date: Date,
-  pNl: number
+get stock bars and orders and sma values for specific account:
+this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week) and sma length
+route: /accounts/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength
+return:
+{
+  orders: {
+    price: number,
+    qty: number,
+    date: Date,
+    type: string (buy or sell)
+  }[];
+  bars: {
+    openPrice: number,
+    closePrice: number,
+    highPrice: number,
+    lowPrice: number,
+    time: Date
+  }[];
+  smaValues: {
+    date: Date,
+    value: number
+  }[];
 }
 
 MODELS: #(maybe this model changed. it is better to see the models in /src/models)

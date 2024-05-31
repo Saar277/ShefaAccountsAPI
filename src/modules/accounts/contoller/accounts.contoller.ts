@@ -52,6 +52,21 @@ class AccountsController {
     }
   };
 
+  getAccountPnlInEveryMonthOrYear = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountPnlInEveryMonthOrYear(
+            req.params.accountName,
+            req.params.monthOrYear
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
+
   getAccountsTrades = async (req: Request, res: Response) => {
     try {
       res.status(200).send(await Accounts.getClosedTrades());
@@ -139,14 +154,17 @@ class AccountsController {
     }
   };
 
-  getAccountPnlInEveryMonthOrYear = async (req: Request, res: Response) => {
+  getBarsWithOrdersWithSma = async (req: Request, res: Response) => {
     try {
       res
         .status(200)
         .send(
-          await Accounts.getAccountPnlInEveryMonthOrYear(
+          await Accounts.getBarsWithOrdersWithSma(
             req.params.accountName,
-            req.params.monthOrYear
+            req.params.symbol,
+            parseInt(req.params.timeFrame),
+            req.params.TimeFrameUnit,
+            parseInt(req.params.smaLength)
           )
         );
     } catch {

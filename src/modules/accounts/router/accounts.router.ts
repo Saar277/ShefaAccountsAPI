@@ -18,6 +18,10 @@ router
   .route("/values/:accountName/:startDate/:endDate")
   .get(accountsContoller.getAccountValuesHistoryInDates);
 
+router
+  .route("/pNl/:accountName/:monthOrYear")
+  .get(accountsContoller.getAccountPnlInEveryMonthOrYear);
+
 router.route("/trades").get(accountsContoller.getAccountsTrades);
 
 router.route("/trades/:accountName").get(accountsContoller.getAccountTrades);
@@ -32,7 +36,9 @@ router
 
 router.route("/symbols").get(accountsContoller.getAccountsOrdersSymbols);
 
-router.route("/symbols/:accountName").get(accountsContoller.getAccountOrdersSymbols);
+router
+  .route("/symbols/:accountName")
+  .get(accountsContoller.getAccountOrdersSymbols);
 
 router.route("/names").get(accountsContoller.getAccountsNames);
 
@@ -40,8 +46,8 @@ router
   .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit")
   .get(accountsContoller.getBarsWithOrders);
 
-router
-  .route("/pNl/:accountName/:monthOrYear")
-  .get(accountsContoller.getAccountPnlInEveryMonthOrYear);
+  router
+  .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
+  .get(accountsContoller.getBarsWithOrdersWithSma);
 
 module.exports = router;

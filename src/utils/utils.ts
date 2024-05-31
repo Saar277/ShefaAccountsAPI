@@ -1,3 +1,4 @@
+import Bar from "../models/Bar";
 import { TradeType } from "../models/TradeType";
 
 export const calclautePercentagePnL = (
@@ -135,3 +136,32 @@ export const filterTradesByTimeRange = (
       trade.closeTime.getTime() <= endDateInMilliseconds
   );
 };
+
+const calculateSmaByBars = (bars: Bar[], smaLength: number): number => {
+  let sum = 0;
+  let index = 1;
+  let currBar = bars[bars.length - index];
+
+  while (index <= smaLength && currBar) {
+    sum += currBar.closePrice;
+    index++;
+    currBar = bars[bars.length - index];
+  }
+
+  return sum / (index - 1);
+}
+
+export const getSmaValuesFromBars = (bars: Bar[], smaLength: number): {date: Date, value: number}[] => {
+  const passedBars: Bar[] = [];
+  const smaValues: {date: Date, value: number}[] = [];
+
+  for (let bar of bars) {
+    passedBars.push(bar);
+    smaValues.push({
+      date: bar.time,
+      value: calculateSmaByBars(passedBars, smaLength)
+    })
+  }
+
+  return smaValues;
+}

@@ -8,8 +8,10 @@ import {
   mapAccountValueInDateToPnlInEveryMonth,
   mapAccountValueInDateToPnlInEveryYear,
   filterTradesByTimeRange,
+  getSmaValuesFromBars,
 } from "../utils/utils";
 import e from "express";
+import Bar from "../models/Bar";
 
 export class Accounts {
   private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =
@@ -307,6 +309,41 @@ export class Accounts {
       return {
         orders: orders,
         bars: bars,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  public static async getBarsWithOrdersWithSma(
+    accountName: string,
+    symbol: string,
+    timeFrame: number,
+    timeFrameUnit: string,
+    smaLength: number
+  ) {
+    try {
+      const account = this.accounts.find(
+        (account) => account.name === accountName
+      );
+      const orders = await account.iBrokerAPI.getOrdersBySymbol(symbol);
+
+      const fiveDaysInMilliseconds: number = 432000000;
+      const startDate = new Date(
+        orders[0].date.getTime() - fiveDaysInMilliseconds
+      ).toISOString();
+      const bars: Bar[] = await account.iBrokerAPI.getBars(
+        symbol,
+        timeFrame,
+        timeFrameUnit,
+        true,
+        startDate
+      );
+
+      return {
+        orders: orders,
+        bars: bars,
+        smaValues: getSmaValuesFromBars(bars, smaLength)
       };
     } catch (error) {
       console.log(error);
