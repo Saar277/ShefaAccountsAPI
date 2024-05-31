@@ -17,6 +17,7 @@ exports.Accounts = void 0;
 const AlpacaBrokerAPI_1 = __importDefault(require("./AlpacaBrokerAPI"));
 const env_1 = require("../env");
 const TradeType_1 = require("../models/TradeType");
+const utils_1 = require("../utils/utils");
 class Accounts {
     static getAccounts() {
         return this.accounts;
@@ -39,7 +40,7 @@ class Accounts {
             })));
         });
     }
-    static getAccountValuesHistory() {
+    static getAccountsValuesHistory() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield Promise.all(this.accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
                 return {
@@ -47,6 +48,34 @@ class Accounts {
                     accountValuesHistory: yield account.iBrokerAPI.getAccountValuesHistory(),
                 };
             })));
+        });
+    }
+    static getAccountValuesHistory(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAccountValuesHistory();
+        });
+    }
+    static getAccountValuesHistoryInDatesRange(accountName, startDateInMilliseconds, endDateInMilliseconds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAccountValuesHistory()).filter((valueInDate) => {
+                const valueInDateMilliseconds = valueInDate.date.getTime();
+                return (valueInDateMilliseconds >= startDateInMilliseconds &&
+                    valueInDateMilliseconds <= endDateInMilliseconds);
+            });
+        });
+    }
+    static getAccountPnlInEveryMonthOrYear(accountName, monthOrYear) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accountValuesInDates = yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAccountValuesHistory();
+            return monthOrYear === "month"
+                ? (0, utils_1.mapAccountValueInDateToPnlInEveryMonth)(accountValuesInDates)
+                : (0, utils_1.mapAccountValueInDateToPnlInEveryYear)(accountValuesInDates);
         });
     }
     static getClosedTrades() {
@@ -57,6 +86,13 @@ class Accounts {
                     trades: yield account.iBrokerAPI.getClosedTrades(),
                 };
             })));
+        });
+    }
+    static getClosedTradesForAccount(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getClosedTrades();
         });
     }
     static getStartMoneyAmount(accountName) {
@@ -105,6 +141,39 @@ class Accounts {
             };
         });
     }
+    static getAccountTradesStatisticsInTimeRange(accountName, startDateInMilliseconds, endDateInMilliseconds) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const trades = (0, utils_1.filterTradesByTimeRange)(yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getClosedTrades(), startDateInMilliseconds, endDateInMilliseconds);
+            const valuesHistory = yield this.getAccountValuesHistoryInDatesRange(accountName, startDateInMilliseconds, endDateInMilliseconds);
+            const startMoneyAmount = valuesHistory[0].value;
+            const moneyAmount = valuesHistory[valuesHistory.length - 1].value;
+            const pNl = moneyAmount - startMoneyAmount;
+            const winningTrades = trades.filter((trade) => trade.pNl > 0);
+            const avgWinningTrade = this.getAvgWinningTrade(winningTrades);
+            const avgLosingTrade = this.getAvgLosingTrade(trades);
+            const longTradesPrecentage = (trades.filter((trade) => trade.type === TradeType_1.TradeType.LONG).length /
+                trades.length) *
+                100;
+            return {
+                startMoneyAmount: startMoneyAmount,
+                moneyAmount: moneyAmount,
+                pNl: pNl,
+                percentPNl: (pNl / startMoneyAmount) * 100,
+                winningTradesCount: winningTrades.length,
+                losingTradesCount: trades.length - winningTrades.length,
+                successRate: (winningTrades.length / trades.length) * 100,
+                avgWinningTrade: avgWinningTrade,
+                avgLosingTrade: avgLosingTrade,
+                ratio: avgWinningTrade / avgLosingTrade,
+                largestWinningTrade: Math.max(...trades.map((trade) => trade.pNl)),
+                largestLosingTrade: Math.min(...trades.map((trade) => trade.pNl)),
+                longPrecentage: longTradesPrecentage,
+                shortPrecentage: 100 - longTradesPrecentage,
+            };
+        });
+    }
     static getAvgWinningTrade(winningTrades) {
         let sum = 0;
         winningTrades.forEach((trade) => {
@@ -126,20 +195,46 @@ class Accounts {
             };
         })));
     }
+    static getAccountOrdersSymbols(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAllOrdersSymbols();
+        });
+    }
     static getAccountsNames() {
-        return this.accounts.map(account => account.name);
+        return this.accounts.map((account) => account.name);
     }
     static getBarsWithOrders(accountName, symbol, timeFrame, timeFrameUnit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const account = this.accounts.find(account => account.name === accountName);
+                const account = this.accounts.find((account) => account.name === accountName);
                 const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol);
                 const fiveDaysInMilliseconds = 432000000;
                 const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
                 const bars = yield account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
                 return {
                     orders: orders,
-                    bars: bars
+                    bars: bars,
+                };
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+    }
+    static getBarsWithOrdersWithSma(accountName, symbol, timeFrame, timeFrameUnit, smaLength) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const account = this.accounts.find((account) => account.name === accountName);
+                const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol);
+                const fiveDaysInMilliseconds = 432000000;
+                const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
+                const bars = yield account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
+                return {
+                    orders: orders,
+                    bars: bars,
+                    smaValues: (0, utils_1.getSmaValuesFromBars)(bars, smaLength)
                 };
             }
             catch (error) {

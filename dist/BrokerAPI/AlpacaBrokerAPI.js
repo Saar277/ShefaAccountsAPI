@@ -86,9 +86,13 @@ class AlpacaBrokerAPI {
                 }
                 finally { if (e_1) throw e_1.error; }
             }
-            historicalData = onlyMarketHours
-                ? yield this.filterBarsOnlyMarketHours(historicalData, timeFrame)
-                : historicalData;
+            historicalData =
+                onlyMarketHours &&
+                    timeFrameUnit !== entityv2_1.TimeFrameUnit.DAY &&
+                    timeFrameUnit !== entityv2_1.TimeFrameUnit.MONTH &&
+                    timeFrameUnit !== entityv2_1.TimeFrameUnit.WEEK
+                    ? yield this.filterBarsOnlyMarketHours(historicalData, timeFrame)
+                    : historicalData;
             return yield this.convertAlpacaBarsToBars(historicalData);
         });
     }

@@ -30,9 +30,39 @@ class AccountsController {
         });
         this.getAccountsValuesHistory = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                res.status(200).send(yield Accounts_1.Accounts.getAccountValuesHistory());
+                res.status(200).send(yield Accounts_1.Accounts.getAccountsValuesHistory());
             }
             catch (_b) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountValuesHistory = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountValuesHistory(req.params.accountName));
+            }
+            catch (_c) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountValuesHistoryInDates = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountValuesHistoryInDatesRange(req.params.accountName, parseInt(req.params.startDate), parseInt(req.params.endDate)));
+            }
+            catch (_d) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountPnlInEveryMonthOrYear = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountPnlInEveryMonthOrYear(req.params.accountName, req.params.monthOrYear));
+            }
+            catch (_e) {
                 res.status(500).send();
             }
         });
@@ -40,7 +70,17 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getClosedTrades());
             }
-            catch (_c) {
+            catch (_f) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountTrades = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getClosedTradesForAccount(req.params.accountName));
+            }
+            catch (_g) {
                 res.status(500).send();
             }
         });
@@ -50,7 +90,17 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountTradesStatistics(req.params.accountName));
             }
-            catch (_d) {
+            catch (_h) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountStatisticsInTimeRange = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountTradesStatisticsInTimeRange(req.params.accountName, parseInt(req.params.startDate), parseInt(req.params.endDate)));
+            }
+            catch (_j) {
                 res.status(500).send();
             }
         });
@@ -58,7 +108,15 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getAccountsOrdersSymbols());
             }
-            catch (_e) {
+            catch (_k) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountOrdersSymbols = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res.status(200).send(yield Accounts_1.Accounts.getAccountOrdersSymbols(req.params.accountName));
+            }
+            catch (_l) {
                 res.status(500).send();
             }
         });
@@ -76,7 +134,17 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
             }
-            catch (_f) {
+            catch (_m) {
+                res.status(500).send();
+            }
+        });
+        this.getBarsWithOrdersWithSma = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSma(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength)));
+            }
+            catch (_o) {
                 res.status(500).send();
             }
         });
