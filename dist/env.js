@@ -13,6 +13,11 @@ exports.accountsInfo = [
         API_SECRET: "Wgn7e0mYrbGnDUBNw25u7Cfmt7VwFwXcFQpiGdcc"
     },
     {
+        NAME: "b&s-15Min-TSLA-bestPnLCombination",
+        API_KEY: "PKY1WHBB4ZZ3401KX0LE",
+        API_SECRET: "A7RZVsMbHhc1nfnKo7U8oIpecyBmoIQ96aDj3a4n",
+    },
+    {
         NAME: "b&s-15Min-AAPL",
         API_KEY: "PK46VO5KPVMZHFJ4D2DG",
         API_SECRET: "XAbm6XRyVFkf6FZ6cthgsNoqkt2owluv9D3i9TvE",
@@ -21,6 +26,6 @@ exports.accountsInfo = [
         NAME: "b&s-15Min-QQQ",
         API_KEY: "PKP5FN5OED69X6Y58EBY",
         API_SECRET: "bx0Kvz6R6glth1FBk62Iw6tAqDcFZmrx6SoxecJl",
-    },
+    }
 ];
 //# sourceMappingURL=env.js.map
