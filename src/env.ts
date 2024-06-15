@@ -23,5 +23,10 @@ export const accountsInfo = [
     NAME: "b&s-15Min-QQQ",
     API_KEY: "PKP5FN5OED69X6Y58EBY",
     API_SECRET: "bx0Kvz6R6glth1FBk62Iw6tAqDcFZmrx6SoxecJl",
+  },
+  {
+    NAME: "test",
+    API_KEY: "PKWFGBOOTLH6DI9TBIMA",
+    API_SECRET: "ezClONTh9zvbQg8SDYsNXiL3d8QWah06Z01JVvSM",
   }
 ];
