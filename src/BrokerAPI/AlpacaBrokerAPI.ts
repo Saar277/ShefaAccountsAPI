@@ -488,15 +488,40 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     );
   }
 
-  async getOrdersBySymbol(symbol: string) {
-    return (await this.fetchAllClosedOrders(symbol)).map((order) => {
-      return {
+  async getOrdersBySymbol(symbol: string): Promise<
+    {
+      price: number;
+      qty: number;
+      date: Date;
+      type: "buy" | "sell";
+    }[]
+  > {
+    const orders: PromiseLike<{ price: number; qty: number; date: Date; type: "buy" | "sell"; }[]> | { price: number; qty: number; date: Date; type: any; }[] = [];
+    const brokerOrders = await this.fetchAllClosedOrders(symbol);
+
+    brokerOrders.forEach((order) => {
+      orders.push({
         price: parseFloat(order.filled_avg_price),
         qty: parseFloat(order.qty),
         date: new Date(order.filled_at),
         type: order.side,
-      };
+      });
+
+      if (order.legs) {
+        order.legs.forEach((leg: { filled_avg_price: string; qty: string; filled_at: string | number | Date; side: any; }) => {
+          if (leg.filled_avg_price) {
+            orders.push({
+              price: parseFloat(leg.filled_avg_price),
+              qty: parseFloat(leg.qty),
+              date: new Date(leg.filled_at),
+              type: leg.side,
+            });
+          }
+        });
+      }
     });
+
+    return orders;
   }
 
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {
