@@ -413,14 +413,29 @@ class AlpacaBrokerAPI {
     }
     getOrdersBySymbol(symbol) {
         return __awaiter(this, void 0, void 0, function* () {
-            return (yield this.fetchAllClosedOrders(symbol)).map((order) => {
-                return {
+            const orders = [];
+            const brokerOrders = yield this.fetchAllClosedOrders(symbol);
+            brokerOrders.forEach((order) => {
+                orders.push({
                     price: parseFloat(order.filled_avg_price),
                     qty: parseFloat(order.qty),
                     date: new Date(order.filled_at),
                     type: order.side,
-                };
+                });
+                if (order.legs) {
+                    order.legs.forEach((leg) => {
+                        if (leg.filled_avg_price) {
+                            orders.push({
+                                price: parseFloat(leg.filled_avg_price),
+                                qty: parseFloat(leg.qty),
+                                date: new Date(leg.filled_at),
+                                type: leg.side,
+                            });
+                        }
+                    });
+                }
             });
+            return orders;
         });
     }
     convertAlpacaBarsToBars(bars) {
