@@ -40,7 +40,7 @@ in monthOrYear you need to write month or year
 return {
   date: Date,
   pNl: number
-}
+}[]
 
 get accounts closed trades:
 route: /accounts/trades
