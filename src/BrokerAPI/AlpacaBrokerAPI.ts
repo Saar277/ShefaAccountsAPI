@@ -375,7 +375,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
           new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)
         ).toISOString(),
         direction: "desc",
-        nested: "false",
+        nested: "true",
         symbols: symbol !== undefined ? symbol : "",
       });
 
@@ -405,6 +405,19 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   createTradesFromOrders(orders: any[]) {
+    const ordersWithLegsOut: any[] = [];
+    orders.forEach((order) => {
+      ordersWithLegsOut.push(order);
+
+      if (order.legs) {
+        order.legs.forEach((leg: { filled_avg_price: string; qty: string; filled_at: string | number | Date; side: any; }) => {
+          if (leg.filled_avg_price) {
+            ordersWithLegsOut.push(leg);
+          }
+        });
+      }
+    })
+
     const closedTrades: {
       symbol: string;
       type: TradeType;
@@ -426,7 +439,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     let exitQty: number = 0;
     let tradeType: TradeType = null;
 
-    orders.forEach((order) => {
+    ordersWithLegsOut.forEach((order) => {
       const qty: number = parseInt(order.filled_qty);
 
       if (entryQty === 0 || symbol != order.symbol) {
