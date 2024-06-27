@@ -26,7 +26,7 @@ export const accountsInfo = [
   },
   {
     NAME: "test",
-    API_KEY: "PKI9U8OVP89R1AEI8EE1",
-    API_SECRET: "gMOxxKjKEYRrGV9MfrnR7MhwfwqBuI7w0ZeWO7Vj",
+    API_KEY: "PKR6QHZ6I6IMY0W96YHT",
+    API_SECRET: "RPBw7Tg2eCP9XfawIgjq2z0oLyJc22HFkHqzeq4M",
   }
 ];

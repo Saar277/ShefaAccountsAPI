@@ -327,7 +327,7 @@ class AlpacaBrokerAPI {
                     after: new Date(new Date().getTime() - thirtyDaysInMilliseconds * index).toISOString(),
                     until: new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)).toISOString(),
                     direction: "desc",
-                    nested: "false",
+                    nested: "true",
                     symbols: symbol !== undefined ? symbol : "",
                 });
                 allOrders = allOrders.concat(orders);
@@ -353,6 +353,17 @@ class AlpacaBrokerAPI {
         });
     }
     createTradesFromOrders(orders) {
+        const ordersWithLegsOut = [];
+        orders.forEach((order) => {
+            ordersWithLegsOut.push(order);
+            if (order.legs) {
+                order.legs.forEach((leg) => {
+                    if (leg.filled_avg_price) {
+                        ordersWithLegsOut.push(leg);
+                    }
+                });
+            }
+        });
         const closedTrades = [];
         let symbol = "";
         let entries = [];
@@ -360,7 +371,7 @@ class AlpacaBrokerAPI {
         let entryQty = 0;
         let exitQty = 0;
         let tradeType = null;
-        orders.forEach((order) => {
+        ordersWithLegsOut.forEach((order) => {
             const qty = parseInt(order.filled_qty);
             if (entryQty === 0 || symbol != order.symbol) {
                 symbol = order.symbol;
