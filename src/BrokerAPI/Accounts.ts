@@ -32,6 +32,7 @@ export class Accounts {
           accountInfo.API_SECRET
         ),
         name: accountInfo.NAME,
+        strategy: accountInfo.STRATEGY
       };
     });
   }
@@ -312,13 +313,13 @@ export class Accounts {
         startDate
       );
 
-      const position = await account.iBrokerAPI.getPosition(symbol);
+      const position = await account.iBrokerAPI.getPositionForStrategy(symbol, account.strategy);
 
       return {
         orders: orders,
         bars: bars,
-        stopLosses: position.stopLosses || [],
-        takeProfits: position.takeProfits || [],
+        stopLosses: position?.stopLosses || [],
+        takeProfits: position?.takeProfits || [],
       };
     } catch (error) {
       console.log(error);

@@ -18,6 +18,7 @@ import {
 import { uniq } from "lodash";
 import moment from "moment-timezone";
 import OrderPoint from "../models/orderPoint";
+import { StrategyType } from "../strategiesTypes";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -340,9 +341,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   async getPositionsForStrategy(
-    strategy: string | undefined | null
+    strategy: string | undefined
   ): Promise<Position[]> {
-    if (strategy === "ShefaStrategy") {
+    if (strategy === StrategyType.SHEFA) {
       return await (
         await this.alpaca.getPositions()
       ).map(async (position: any) => {
@@ -355,9 +356,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
   async getPositionForStrategy(
     symbol: string,
-    strategy: string | undefined | null
+    strategy: string | undefined
   ): Promise<Position> {
-    if (strategy === "ShefaStrategy") {
+    if (strategy === StrategyType.SHEFA) {
       return await this.getShefaStratgeyPosition(symbol);
     } else {
       return await this.getPosition(symbol);
@@ -398,11 +399,11 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
   async getShefaStratgeyPosition(symbol: string): Promise<Position | null> {
     try {
+      const brokerPosition = await this.alpaca.getPosition(symbol);
+
       const brokerClosedOrders = await this.fetchAllClosedOrders(symbol);
       const lastTwoOrdersWithLegs =
         this.getTwoLastOrdersWithLegs(brokerClosedOrders);
-
-      const brokerPosition = await this.alpaca.getPosition(symbol);
 
       const tradeType = getTradeTypeFromString(brokerPosition.side);
 

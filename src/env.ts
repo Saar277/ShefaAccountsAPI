@@ -1,3 +1,5 @@
+import { StrategyType } from "./strategiesTypes";
+
 export const accountsInfo = [
   {
     NAME: "saar",
@@ -28,5 +30,6 @@ export const accountsInfo = [
     NAME: "test",
     API_KEY: "PKR6QHZ6I6IMY0W96YHT",
     API_SECRET: "RPBw7Tg2eCP9XfawIgjq2z0oLyJc22HFkHqzeq4M",
+    STRATEGY: StrategyType.SHEFA
   }
 ];
