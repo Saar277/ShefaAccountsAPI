@@ -1,3 +1,4 @@
+import OrderPoint from "./orderPoint";
 import { TradeType } from "./TradeType";
 
 export interface Position {
@@ -12,8 +13,10 @@ export interface Position {
   dailyPnl: number;
   currentStockPrice: number;
   netLiquidation: number;
-  stopLosses?: { price: number; qty: number; isTaken?: boolean }[];
-  takeProfits?: { price: number; qty: number }[];
+  stopLosses?: OrderPoint[];
+  takeProfits?: OrderPoint[];
   isTakenBaseProfit?: boolean;
-  stopLossesHistory?: { price: number; qty: number }[];
+  stopLossesHistory?: OrderPoint[];
+  entries?: OrderPoint[];
+  exits?: OrderPoint[];
 }

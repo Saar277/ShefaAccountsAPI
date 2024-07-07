@@ -137,12 +137,12 @@ class AccountsController {
     }
   };
 
-  getBarsWithOrders = async (req: Request, res: Response) => {
+  getBarsWithOrdersAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
     try {
       res
         .status(200)
         .send(
-          await Accounts.getBarsWithOrders(
+          await Accounts.getBarsWithOrdersAndStopLossesAndTakeProfits(
             req.params.accountName,
             req.params.symbol,
             parseInt(req.params.timeFrame),
@@ -154,17 +154,35 @@ class AccountsController {
     }
   };
 
-  getBarsWithOrdersWithSma = async (req: Request, res: Response) => {
+  getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
     try {
       res
         .status(200)
         .send(
-          await Accounts.getBarsWithOrdersWithSma(
+          await Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(
             req.params.accountName,
             req.params.symbol,
             parseInt(req.params.timeFrame),
             req.params.TimeFrameUnit,
             parseInt(req.params.smaLength)
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(
+            req.params.accountName,
+            req.params.symbol,
+            parseInt(req.params.timeFrame),
+            req.params.TimeFrameUnit,
+            parseInt(req.params.rollingWindow)
           )
         );
     } catch {

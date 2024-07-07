@@ -1,5 +1,7 @@
-import Bar from "../models/Bar";
+import { MinMaxBar } from "../models/Bar/MinMaxBar";
+import Bar from "../models/Bar/Bar";
 import { TradeType } from "../models/TradeType";
+import { MinMaxType } from "../models/Bar/MinMaxBar";
 
 export const calclautePercentagePnL = (
   entryPrice: number,
@@ -149,19 +151,65 @@ const calculateSmaByBars = (bars: Bar[], smaLength: number): number => {
   }
 
   return sum / (index - 1);
-}
+};
 
-export const getSmaValuesFromBars = (bars: Bar[], smaLength: number): {date: Date, value: number}[] => {
+export const getSmaValuesFromBars = (
+  bars: Bar[],
+  smaLength: number
+): { date: Date; value: number }[] => {
   const passedBars: Bar[] = [];
-  const smaValues: {date: Date, value: number}[] = [];
+  const smaValues: { date: Date; value: number }[] = [];
 
   for (let bar of bars) {
     passedBars.push(bar);
     smaValues.push({
       date: bar.time,
-      value: calculateSmaByBars(passedBars, smaLength)
-    })
+      value: calculateSmaByBars(passedBars, smaLength),
+    });
   }
 
   return smaValues;
-}
+};
+
+export const findLocalMinimaMaximaIndices = (
+  bars: Bar[],
+  window: number = 1
+): { minima: MinMaxBar[]; maxima: MinMaxBar[] } => {
+  const minima: MinMaxBar[] = [];
+  const maxima: MinMaxBar[] = [];
+
+  for (let i = window; i < bars.length - window; i++) {
+    const windowSlice = bars.slice(i - window, i + window + 1);
+
+    const currentBar = bars[i];
+
+    const isMinima = windowSlice.every(
+      (val) => currentBar.closePrice <= val.closePrice
+    );
+    const isMaxima = windowSlice.every(
+      (val) => currentBar.closePrice >= val.closePrice
+    );
+
+    if (isMinima) {
+      minima.push({
+        ...currentBar,
+        type: MinMaxType.MINIMA,
+        pricePoint:
+          currentBar.closePrice > currentBar.openPrice
+            ? currentBar.openPrice
+            : currentBar.closePrice,
+      });
+    } else if (isMaxima) {
+      maxima.push({
+        ...currentBar,
+        type: MinMaxType.MAXIMA,
+        pricePoint:
+          currentBar.closePrice < currentBar.openPrice
+            ? currentBar.openPrice
+            : currentBar.closePrice,
+      });
+    }
+  }
+
+  return { minima, maxima };
+};

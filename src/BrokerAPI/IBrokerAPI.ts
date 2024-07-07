@@ -1,4 +1,4 @@
-import Bar from "../models/Bar";
+import Bar from "../models/Bar/Bar";
 import { Position } from "../models/Position";
 
 interface IBrokerAPI {
@@ -55,7 +55,14 @@ interface IBrokerAPI {
   getCash(): Promise<number>;
   getMoneyAmount(): Promise<number>;
   getPositions(): Promise<Position[]>;
+  getPositionsForStrategy(
+    strategy: string | undefined | null
+  ): Promise<Position[]>;
   getPosition(symbol: string): Promise<any | null>;
+  getPositionForStrategy(
+    symbol: string,
+    strategy: string | undefined | null
+  ): Promise<Position>;
   isInPosition(symbol: string): Promise<boolean>;
   getAccountValuesHistory(): Promise<{ value: number; date: Date }[]>;
   getClosedTrades(): any;
