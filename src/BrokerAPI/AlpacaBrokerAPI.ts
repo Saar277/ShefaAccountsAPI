@@ -428,13 +428,15 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       );
       position.stopLossesHistory = [originalStopLoss];
 
-      position.entries.push({
-        price: parseFloat(brokerPosition.avg_entry_price),
-        qty: originalStopLoss.qty,
-        date: new Date(
-          lastTwoOrdersWithLegs[lastTwoOrdersWithLegs.length - 1].filled_at
-        ),
-      });
+      position.entries = [
+        {
+          price: parseFloat(brokerPosition.avg_entry_price),
+          qty: originalStopLoss.qty,
+          date: new Date(
+            lastTwoOrdersWithLegs[lastTwoOrdersWithLegs.length - 1].filled_at
+          ),
+        },
+      ];
 
       position.stopLosses = await this.getStopLossesForShefaStratgey(
         symbol,
