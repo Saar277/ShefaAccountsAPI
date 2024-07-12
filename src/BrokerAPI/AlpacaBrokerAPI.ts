@@ -821,7 +821,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         symbol = order.symbol;
         entries = [
           {
-            price: order.filled_avg_price,
+            price: parseFloat(order.filled_avg_price),
             qty: qty,
             date: order.filled_at,
           },
@@ -834,14 +834,14 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       } else {
         if (convertBuyOrSellStringToTradeType(order.side) === tradeType) {
           entries.push({
-            price: order.filled_avg_price,
+            price: parseFloat(order.filled_avg_price),
             qty: qty,
             date: order.filled_at,
           });
           entryQty += qty;
         } else {
           exits.push({
-            price: order.filled_avg_price,
+            price: parseFloat(order.filled_avg_price),
             qty: qty,
             date: order.filled_at,
           });
