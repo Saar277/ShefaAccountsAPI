@@ -353,7 +353,7 @@ class AlpacaBrokerAPI {
         });
     }
     createTradesFromOrders(orders) {
-        const ordersWithLegsOut = [];
+        let ordersWithLegsOut = [];
         orders.forEach((order) => {
             ordersWithLegsOut.push(order);
             if (order.legs) {
@@ -364,6 +364,7 @@ class AlpacaBrokerAPI {
                 });
             }
         });
+        ordersWithLegsOut = ordersWithLegsOut.sort((a, b) => new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime());
         const closedTrades = [];
         let symbol = "";
         let entries = [];
