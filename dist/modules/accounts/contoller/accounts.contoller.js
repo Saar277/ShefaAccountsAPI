@@ -28,11 +28,19 @@ class AccountsController {
                 res.status(500).send();
             }
         });
+        this.getAccountPositions = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res.status(200).send(yield Accounts_1.Accounts.getAccountPositions(req.params.accountName));
+            }
+            catch (_b) {
+                res.status(500).send();
+            }
+        });
         this.getAccountsValuesHistory = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getAccountsValuesHistory());
             }
-            catch (_b) {
+            catch (_c) {
                 res.status(500).send();
             }
         });
@@ -42,7 +50,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountValuesHistory(req.params.accountName));
             }
-            catch (_c) {
+            catch (_d) {
                 res.status(500).send();
             }
         });
@@ -52,7 +60,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountValuesHistoryInDatesRange(req.params.accountName, parseInt(req.params.startDate), parseInt(req.params.endDate)));
             }
-            catch (_d) {
+            catch (_e) {
                 res.status(500).send();
             }
         });
@@ -62,7 +70,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountPnlInEveryMonthOrYear(req.params.accountName, req.params.monthOrYear));
             }
-            catch (_e) {
+            catch (_f) {
                 res.status(500).send();
             }
         });
@@ -70,7 +78,7 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getClosedTrades());
             }
-            catch (_f) {
+            catch (_g) {
                 res.status(500).send();
             }
         });
@@ -80,7 +88,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getClosedTradesForAccount(req.params.accountName));
             }
-            catch (_g) {
+            catch (_h) {
                 res.status(500).send();
             }
         });
@@ -90,7 +98,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountTradesStatistics(req.params.accountName));
             }
-            catch (_h) {
+            catch (_j) {
                 res.status(500).send();
             }
         });
@@ -100,7 +108,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountTradesStatisticsInTimeRange(req.params.accountName, parseInt(req.params.startDate), parseInt(req.params.endDate)));
             }
-            catch (_j) {
+            catch (_k) {
                 res.status(500).send();
             }
         });
@@ -108,7 +116,7 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getAccountsOrdersSymbols());
             }
-            catch (_k) {
+            catch (_l) {
                 res.status(500).send();
             }
         });
@@ -116,7 +124,7 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getAccountOrdersSymbols(req.params.accountName));
             }
-            catch (_l) {
+            catch (_m) {
                 res.status(500).send();
             }
         });
@@ -134,7 +142,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
             }
-            catch (_m) {
+            catch (_o) {
                 res.status(500).send();
             }
         });
@@ -144,7 +152,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength)));
             }
-            catch (_o) {
+            catch (_p) {
                 res.status(500).send();
             }
         });
@@ -154,7 +162,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.rollingWindow)));
             }
-            catch (_p) {
+            catch (_q) {
                 res.status(500).send();
             }
         });

@@ -353,6 +353,7 @@ class AlpacaBrokerAPI {
                     qty: Math.abs(brokerPosition.qty),
                     entryPrice: parseFloat(brokerPosition.avg_entry_price),
                 };
+                position.wantedEntryPrice = lastTwoOrdersWithLegs[0].stop_price;
                 position.pNl = parseFloat(brokerPosition.unrealized_pl);
                 const takeProfit = this.getTakeProfitOrderForShefaStratgey(lastTwoOrdersWithLegs, tradeType);
                 position.takeProfits = [takeProfit];
@@ -369,6 +370,18 @@ class AlpacaBrokerAPI {
                 position.stopLosses = yield this.getStopLossesForShefaStratgey(symbol, position.type);
                 position.exits =
                     this.getPositionExitsForShefaStratgey(brokerClosedOrders);
+                let exitsPnL = 0;
+                position.exits.forEach((exit) => {
+                    const pNlInExitPerStock = position.type === TradeType_1.TradeType.LONG
+                        ? exit.price - position.entryPrice
+                        : position.entryPrice - exit.price;
+                    exitsPnL += pNlInExitPerStock * exit.qty;
+                });
+                const originalStopLossPerStock = position.type === TradeType_1.TradeType.LONG
+                    ? position.entryPrice - originalStopLoss.price
+                    : originalStopLoss.price - position.entryPrice;
+                position.ratio =
+                    (exitsPnL + position.pNl) / (originalStopLossPerStock * position.qty);
                 return position;
             }
             catch (error) {
@@ -576,7 +589,12 @@ class AlpacaBrokerAPI {
     getClosedTrades() {
         return __awaiter(this, void 0, void 0, function* () {
             const orders = this.sortOrdersBySymbol(yield this.fetchAllClosedOrders());
-            return this.createTradesFromOrders(orders).sort((a, b) => b.entryTime.getTime() - a.entryTime.getTime());
+            try {
+                return this.createTradesFromOrders(orders).sort((a, b) => b.entryTime.getTime() - a.entryTime.getTime());
+            }
+            catch (error) {
+                console.log(error);
+            }
         });
     }
     fetchAllClosedOrders(symbol) {
@@ -630,7 +648,6 @@ class AlpacaBrokerAPI {
             }
         });
         ordersWithLegsOut = ordersWithLegsOut.sort((a, b) => new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime());
-        ordersWithLegsOut = ordersWithLegsOut.sort((a, b) => new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime());
         const closedTrades = [];
         let symbol = "";
         let entries = [];
@@ -638,7 +655,15 @@ class AlpacaBrokerAPI {
         let entryQty = 0;
         let exitQty = 0;
         let tradeType = null;
+        let originalStopLossPrice = null;
         ordersWithLegsOut.forEach((order) => {
+            if (order.legs) {
+                order.legs.forEach((leg) => {
+                    if (leg.stop_price) {
+                        originalStopLossPrice = parseFloat(leg.stop_price);
+                    }
+                });
+            }
             const qty = parseInt(order.filled_qty);
             if (entryQty === 0 || symbol != order.symbol) {
                 symbol = order.symbol;
@@ -653,6 +678,7 @@ class AlpacaBrokerAPI {
                 entryQty = qty;
                 exitQty = 0;
                 tradeType = (0, TradeType_1.convertBuyOrSellStringToTradeType)(order.side);
+                originalStopLossPrice = null;
             }
             else {
                 if ((0, TradeType_1.convertBuyOrSellStringToTradeType)(order.side) === tradeType) {
@@ -671,13 +697,14 @@ class AlpacaBrokerAPI {
                     });
                     exitQty += qty;
                     if (entryQty === exitQty) {
-                        closedTrades.push((0, utils_1.createTradeFromOrdersData)(symbol, entries, exits, entryQty, tradeType));
+                        closedTrades.push((0, utils_1.createTradeFromOrdersData)(symbol, entries, exits, entryQty, tradeType, originalStopLossPrice));
                         symbol = "";
                         entries = [];
                         exits = [];
                         entryQty = 0;
                         exitQty = 0;
                         tradeType = null;
+                        originalStopLossPrice = null;
                     }
                 }
             }

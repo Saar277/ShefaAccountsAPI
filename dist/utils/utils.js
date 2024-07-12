@@ -23,21 +23,29 @@ const calculateAvgPrice = (priceAndQty) => {
     }
     return totalQty === 0 ? 0 : totalCost / totalQty;
 };
-const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType) => {
+const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType, originalStopLossPrice) => {
     const entryPrice = calculateAvgPrice(entries);
     const closePrice = calculateAvgPrice(exits);
+    const pNl = calclautePnL(entryPrice, closePrice, tradeType, qty);
     return {
         symbol: symbol,
         type: tradeType,
         qty: qty,
         entryPrice: entryPrice,
         entryTime: new Date(entries[0].date),
-        pNl: calclautePnL(entryPrice, closePrice, tradeType, qty),
+        pNl: pNl,
         percentPnL: (0, exports.calclautePercentagePnL)(entryPrice, closePrice, tradeType),
         closePrice: closePrice,
         closeTime: new Date(exits[exits.length - 1].date),
         entries: entries,
         exits: exits,
+        ratio: originalStopLossPrice && pNl > 0
+            ? pNl /
+                ((tradeType === TradeType_1.TradeType.LONG
+                    ? entryPrice - originalStopLossPrice
+                    : originalStopLossPrice - entryPrice) *
+                    qty)
+            : null,
     };
 };
 exports.createTradeFromOrdersData = createTradeFromOrdersData;

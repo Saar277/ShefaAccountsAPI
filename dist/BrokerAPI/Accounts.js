@@ -27,7 +27,7 @@ class Accounts {
             return {
                 iBrokerAPI: new AlpacaBrokerAPI_1.default(accountInfo.API_KEY, accountInfo.API_SECRET),
                 name: accountInfo.NAME,
-                strategy: accountInfo.STRATEGY
+                strategy: accountInfo.STRATEGY,
             };
         });
     }
@@ -39,6 +39,12 @@ class Accounts {
                     positions: yield account.iBrokerAPI.getPositionsForStrategy(account.strategy),
                 };
             })));
+        });
+    }
+    static getAccountPositions(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const account = this.accounts.find((account) => account.name === accountName);
+            return yield account.iBrokerAPI.getPositionsForStrategy(account.strategy);
         });
     }
     static getAccountsValuesHistory() {
