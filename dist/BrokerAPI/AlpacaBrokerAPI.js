@@ -669,7 +669,7 @@ class AlpacaBrokerAPI {
                 symbol = order.symbol;
                 entries = [
                     {
-                        price: order.filled_avg_price,
+                        price: parseFloat(order.filled_avg_price),
                         qty: qty,
                         date: order.filled_at,
                     },
@@ -683,7 +683,7 @@ class AlpacaBrokerAPI {
             else {
                 if ((0, TradeType_1.convertBuyOrSellStringToTradeType)(order.side) === tradeType) {
                     entries.push({
-                        price: order.filled_avg_price,
+                        price: parseFloat(order.filled_avg_price),
                         qty: qty,
                         date: order.filled_at,
                     });
@@ -691,7 +691,7 @@ class AlpacaBrokerAPI {
                 }
                 else {
                     exits.push({
-                        price: order.filled_avg_price,
+                        price: parseFloat(order.filled_avg_price),
                         qty: qty,
                         date: order.filled_at,
                     });
