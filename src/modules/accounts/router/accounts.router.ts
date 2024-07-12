@@ -8,6 +8,8 @@ const router = express.Router();
  */
 router.route("/positions").get(accountsContoller.getAccountsPositions);
 
+router.route("/positions/:accountName").get(accountsContoller.getAccountPositions);
+
 router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
 router

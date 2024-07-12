@@ -32,7 +32,7 @@ export class Accounts {
           accountInfo.API_SECRET
         ),
         name: accountInfo.NAME,
-        strategy: accountInfo.STRATEGY
+        strategy: accountInfo.STRATEGY,
       };
     });
   }
@@ -50,6 +50,16 @@ export class Accounts {
         };
       })
     );
+  }
+
+  public static async getAccountPositions(
+    accountName: string
+  ): Promise<Position[]> {
+    const account = this.accounts.find(
+      (account) => account.name === accountName
+    );
+
+    return await account.iBrokerAPI.getPositionsForStrategy(account.strategy);
   }
 
   public static async getAccountsValuesHistory(): Promise<
@@ -313,7 +323,10 @@ export class Accounts {
         startDate
       );
 
-      const position = await account.iBrokerAPI.getPositionForStrategy(symbol, account.strategy);
+      const position = await account.iBrokerAPI.getPositionForStrategy(
+        symbol,
+        account.strategy
+      );
 
       return {
         orders: orders,

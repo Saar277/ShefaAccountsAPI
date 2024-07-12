@@ -45,10 +45,13 @@ export const createTradeFromOrdersData = (
   entries: any[],
   exits: any[],
   qty: number,
-  tradeType: TradeType
+  tradeType: TradeType,
+  originalStopLossPrice: number
 ) => {
   const entryPrice: number = calculateAvgPrice(entries);
   const closePrice: number = calculateAvgPrice(exits);
+
+  const pNl = calclautePnL(entryPrice, closePrice, tradeType, qty);
 
   return {
     symbol: symbol,
@@ -56,12 +59,20 @@ export const createTradeFromOrdersData = (
     qty: qty,
     entryPrice: entryPrice,
     entryTime: new Date(entries[0].date),
-    pNl: calclautePnL(entryPrice, closePrice, tradeType, qty),
+    pNl: pNl,
     percentPnL: calclautePercentagePnL(entryPrice, closePrice, tradeType),
     closePrice: closePrice,
     closeTime: new Date(exits[exits.length - 1].date),
     entries: entries,
     exits: exits,
+    ratio:
+      originalStopLossPrice && pNl > 0
+        ? pNl /
+          ((tradeType === TradeType.LONG
+            ? entryPrice - originalStopLossPrice
+            : originalStopLossPrice - entryPrice) *
+            qty)
+        : null,
   };
 };
 

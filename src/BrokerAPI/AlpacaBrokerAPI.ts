@@ -414,6 +414,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         entryPrice: parseFloat(brokerPosition.avg_entry_price),
       };
 
+      position.wantedEntryPrice = lastTwoOrdersWithLegs[0].stop_price;
       position.pNl = parseFloat(brokerPosition.unrealized_pl);
 
       const takeProfit = this.getTakeProfitOrderForShefaStratgey(
@@ -445,6 +446,22 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
       position.exits =
         this.getPositionExitsForShefaStratgey(brokerClosedOrders);
+
+      let exitsPnL = 0;
+      position.exits.forEach((exit: OrderPoint) => {
+        const pNlInExitPerStock =
+          position.type === TradeType.LONG
+            ? exit.price - position.entryPrice
+            : position.entryPrice - exit.price;
+        exitsPnL += pNlInExitPerStock * exit.qty;
+      });
+
+      const originalStopLossPerStock =
+        position.type === TradeType.LONG
+          ? position.entryPrice - originalStopLoss.price
+          : originalStopLoss.price - position.entryPrice;
+      position.ratio =
+        (exitsPnL + position.pNl) / (originalStopLossPerStock * position.qty);
 
       return position;
     } catch (error: any) {
@@ -684,9 +701,13 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   async getClosedTrades() {
     const orders = this.sortOrdersBySymbol(await this.fetchAllClosedOrders());
 
-    return this.createTradesFromOrders(orders).sort(
-      (a, b) => b.entryTime.getTime() - a.entryTime.getTime()
-    );
+    try {
+      return this.createTradesFromOrders(orders).sort(
+        (a, b) => b.entryTime.getTime() - a.entryTime.getTime()
+      );
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async fetchAllClosedOrders(symbol?: string) {
@@ -762,11 +783,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime()
     );
 
-    ordersWithLegsOut = ordersWithLegsOut.sort(
-      (a, b) =>
-        new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime()
-    );
-
     const closedTrades: {
       symbol: string;
       type: TradeType;
@@ -779,6 +795,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       closeTime: Date;
       entries: any[];
       exits: any[];
+      ratio: number;
     }[] = [];
 
     let symbol: string = "";
@@ -787,8 +804,17 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     let entryQty: number = 0;
     let exitQty: number = 0;
     let tradeType: TradeType = null;
+    let originalStopLossPrice: number = null;
 
     ordersWithLegsOut.forEach((order) => {
+      if (order.legs) {
+        order.legs.forEach((leg: any) => {
+          if (leg.stop_price) {
+            originalStopLossPrice = parseFloat(leg.stop_price);
+          }
+        });
+      }
+
       const qty: number = parseInt(order.filled_qty);
 
       if (entryQty === 0 || symbol != order.symbol) {
@@ -804,6 +830,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         entryQty = qty;
         exitQty = 0;
         tradeType = convertBuyOrSellStringToTradeType(order.side);
+        originalStopLossPrice = null;
       } else {
         if (convertBuyOrSellStringToTradeType(order.side) === tradeType) {
           entries.push({
@@ -827,15 +854,18 @@ class AlpacaBrokerAPI implements IBrokerAPI {
                 entries,
                 exits,
                 entryQty,
-                tradeType
+                tradeType,
+                originalStopLossPrice
               )
             );
+
             symbol = "";
             entries = [];
             exits = [];
             entryQty = 0;
             exitQty = 0;
             tradeType = null;
+            originalStopLossPrice = null;
           }
         }
       }

@@ -10,9 +10,19 @@ class AccountsController {
    * @param req - the request from the world
    * @param res - the response we return
    */
+
+
   getAccountsPositions = async (req: Request, res: Response) => {
     try {
       res.status(200).send(await Accounts.getAccountsPositions());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountPositions = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountPositions(req.params.accountName));
     } catch {
       res.status(500).send();
     }

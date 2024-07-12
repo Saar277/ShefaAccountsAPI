@@ -198,6 +198,8 @@ Position {
   stopLossesHistory?: OrderPoint[];
   entries?: OrderPoint[];
   exits?: OrderPoint[];
+  wantedEntryPrice?: number;
+  ratio?: number;
 }
 
 OrderPoint = {
