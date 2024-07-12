@@ -128,23 +128,33 @@ class AccountsController {
                 res.status(500).send();
             }
         };
-        this.getBarsWithOrders = (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getBarsWithOrdersAndStopLossesAndTakeProfits = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res
                     .status(200)
-                    .send(yield Accounts_1.Accounts.getBarsWithOrders(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
             }
             catch (_m) {
                 res.status(500).send();
             }
         });
-        this.getBarsWithOrdersWithSma = (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res
                     .status(200)
-                    .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSma(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength)));
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength)));
             }
             catch (_o) {
+                res.status(500).send();
+            }
+        });
+        this.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.rollingWindow)));
+            }
+            catch (_p) {
                 res.status(500).send();
             }
         });

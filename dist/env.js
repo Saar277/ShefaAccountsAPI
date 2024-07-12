@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.accountsInfo = void 0;
+const strategiesTypes_1 = require("./strategiesTypes");
 exports.accountsInfo = [
     {
         NAME: "saar",
@@ -31,6 +32,7 @@ exports.accountsInfo = [
         NAME: "test",
         API_KEY: "PKR6QHZ6I6IMY0W96YHT",
         API_SECRET: "RPBw7Tg2eCP9XfawIgjq2z0oLyJc22HFkHqzeq4M",
+        STRATEGY: strategiesTypes_1.StrategyType.SHEFA
     }
 ];
 //# sourceMappingURL=env.js.map

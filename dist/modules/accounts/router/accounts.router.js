@@ -35,9 +35,15 @@ router
 router.route("/names").get(accounts_contoller_1.default.getAccountsNames);
 router
     .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit")
-    .get(accounts_contoller_1.default.getBarsWithOrders);
+    .get(accounts_contoller_1.default.getBarsWithOrdersAndStopLossesAndTakeProfits);
 router
     .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
-    .get(accounts_contoller_1.default.getBarsWithOrdersWithSma);
+    .get(accounts_contoller_1.default.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits); //TODO: delete it after the front use the route below
+router
+    .route("/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
+    .get(accounts_contoller_1.default.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits);
+router
+    .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:rollingWindow")
+    .get(accounts_contoller_1.default.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits);
 module.exports = router;
 //# sourceMappingURL=accounts.router.js.map

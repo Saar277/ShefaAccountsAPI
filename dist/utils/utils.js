@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
+exports.findLocalMinimaMaximaIndices = exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
 const TradeType_1 = require("../models/TradeType");
+const MinMaxBar_1 = require("../models/Bar/MinMaxBar");
 const calclautePercentagePnL = (entryPrice, closePrice, tradeType) => {
     return ((tradeType === TradeType_1.TradeType.LONG
         ? (closePrice - entryPrice) / entryPrice
@@ -109,10 +110,32 @@ const getSmaValuesFromBars = (bars, smaLength) => {
         passedBars.push(bar);
         smaValues.push({
             date: bar.time,
-            value: calculateSmaByBars(passedBars, smaLength)
+            value: calculateSmaByBars(passedBars, smaLength),
         });
     }
     return smaValues;
 };
 exports.getSmaValuesFromBars = getSmaValuesFromBars;
+const findLocalMinimaMaximaIndices = (bars, window = 1) => {
+    const minima = [];
+    const maxima = [];
+    for (let i = window; i < bars.length - window; i++) {
+        const windowSlice = bars.slice(i - window, i + window + 1);
+        const currentBar = bars[i];
+        const isMinima = windowSlice.every((val) => currentBar.closePrice <= val.closePrice);
+        const isMaxima = windowSlice.every((val) => currentBar.closePrice >= val.closePrice);
+        if (isMinima) {
+            minima.push(Object.assign(Object.assign({}, currentBar), { type: MinMaxBar_1.MinMaxType.MINIMA, pricePoint: currentBar.closePrice > currentBar.openPrice
+                    ? currentBar.openPrice
+                    : currentBar.closePrice }));
+        }
+        else if (isMaxima) {
+            maxima.push(Object.assign(Object.assign({}, currentBar), { type: MinMaxBar_1.MinMaxType.MAXIMA, pricePoint: currentBar.closePrice < currentBar.openPrice
+                    ? currentBar.openPrice
+                    : currentBar.closePrice }));
+        }
+    }
+    return { minima, maxima };
+};
+exports.findLocalMinimaMaximaIndices = findLocalMinimaMaximaIndices;
 //# sourceMappingURL=utils.js.map

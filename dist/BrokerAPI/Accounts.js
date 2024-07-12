@@ -27,6 +27,7 @@ class Accounts {
             return {
                 iBrokerAPI: new AlpacaBrokerAPI_1.default(accountInfo.API_KEY, accountInfo.API_SECRET),
                 name: accountInfo.NAME,
+                strategy: accountInfo.STRATEGY
             };
         });
     }
@@ -35,7 +36,7 @@ class Accounts {
             return yield Promise.all(this.accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
                 return {
                     accountName: account.name,
-                    positions: yield account.iBrokerAPI.getPositions(),
+                    positions: yield account.iBrokerAPI.getPositionsForStrategy(account.strategy),
                 };
             })));
         });
@@ -205,7 +206,7 @@ class Accounts {
     static getAccountsNames() {
         return this.accounts.map((account) => account.name);
     }
-    static getBarsWithOrders(accountName, symbol, timeFrame, timeFrameUnit) {
+    static getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const account = this.accounts.find((account) => account.name === accountName);
@@ -213,9 +214,12 @@ class Accounts {
                 const fiveDaysInMilliseconds = 432000000;
                 const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
                 const bars = yield account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
+                const position = yield account.iBrokerAPI.getPositionForStrategy(symbol, account.strategy);
                 return {
                     orders: orders,
                     bars: bars,
+                    stopLosses: (position === null || position === void 0 ? void 0 : position.stopLosses) || [],
+                    takeProfits: (position === null || position === void 0 ? void 0 : position.takeProfits) || [],
                 };
             }
             catch (error) {
@@ -223,18 +227,45 @@ class Accounts {
             }
         });
     }
-    static getBarsWithOrdersWithSma(accountName, symbol, timeFrame, timeFrameUnit, smaLength) {
+    static getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, smaLength) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const account = this.accounts.find((account) => account.name === accountName);
-                const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol);
-                const fiveDaysInMilliseconds = 432000000;
-                const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
-                const bars = yield account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
+                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit);
                 return {
                     orders: orders,
                     bars: bars,
-                    smaValues: (0, utils_1.getSmaValuesFromBars)(bars, smaLength)
+                    smaValues: (0, utils_1.getSmaValuesFromBars)(bars, smaLength),
+                    stopLosses: stopLosses,
+                    takeProfits: takeProfits,
+                };
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+    }
+    static getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, rollingWindow) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit);
+                const { minima, maxima } = (0, utils_1.findLocalMinimaMaximaIndices)(bars, rollingWindow);
+                return {
+                    orders: orders,
+                    bars: bars,
+                    minPoints: minima.map((bar) => {
+                        return {
+                            pricePoint: bar.pricePoint,
+                            time: bar.time,
+                        };
+                    }),
+                    maxPoints: maxima.map((bar) => {
+                        return {
+                            pricePoint: bar.pricePoint,
+                            time: bar.time,
+                        };
+                    }),
+                    stopLosses: stopLosses,
+                    takeProfits: takeProfits,
                 };
             }
             catch (error) {

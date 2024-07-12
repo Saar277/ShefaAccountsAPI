@@ -25,6 +25,7 @@ const utils_1 = require("../utils/utils");
 const TradeType_1 = require("../models/TradeType");
 const lodash_1 = require("lodash");
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
+const strategiesTypes_1 = require("../strategiesTypes");
 class AlpacaBrokerAPI {
     constructor(apiKey, apiSecret) {
         this.apiKey = apiKey;
@@ -244,6 +245,28 @@ class AlpacaBrokerAPI {
             return parseInt((yield this.alpaca.getAccount()).portfolio_value);
         });
     }
+    fetchAllOrders(symbol) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const thirtyDaysInMilliseconds = 2592000000;
+            let allOrders = [];
+            let orders = [];
+            let index = 1;
+            while (orders.length !== 0 || index == 1) {
+                orders = yield this.alpaca.getOrders({
+                    status: "all",
+                    limit: 500,
+                    after: new Date(new Date().getTime() - thirtyDaysInMilliseconds * index).toISOString(),
+                    until: new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)).toISOString(),
+                    direction: "desc",
+                    nested: "true",
+                    symbols: symbol !== undefined ? symbol : "",
+                });
+                allOrders = allOrders.concat(orders);
+                index++;
+            }
+            return allOrders.filter((order) => order.status !== "canceled").reverse();
+        });
+    }
     getPositions() {
         return __awaiter(this, void 0, void 0, function* () {
             const positions = yield this.alpaca.getPositions();
@@ -267,10 +290,46 @@ class AlpacaBrokerAPI {
                 : [];
         });
     }
+    getPositionsForStrategy(strategy) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (strategy === strategiesTypes_1.StrategyType.SHEFA) {
+                return yield (yield this.alpaca.getPositions()).map((position) => __awaiter(this, void 0, void 0, function* () {
+                    return yield this.getShefaStratgeyPosition(position.symbol);
+                }));
+            }
+            else {
+                return yield this.getPositions();
+            }
+        });
+    }
+    getPositionForStrategy(symbol, strategy) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (strategy === strategiesTypes_1.StrategyType.SHEFA) {
+                return yield this.getShefaStratgeyPosition(symbol);
+            }
+            else {
+                return yield this.getPosition(symbol);
+            }
+        });
+    }
     getPosition(symbol) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                return yield this.alpaca.getPosition(symbol);
+                const position = yield this.alpaca.getPosition(symbol);
+                const tradeType = (0, TradeType_1.getTradeTypeFromString)(position.side);
+                return {
+                    id: undefined,
+                    symbol: position.symbol,
+                    type: tradeType,
+                    qty: position.qty,
+                    entryPrice: position.avg_entry_price,
+                    entryTime: undefined,
+                    pNl: position.unrealized_pl,
+                    percentPnL: (0, utils_1.calclautePercentagePnL)(position.avg_entry_price, position.current_price, tradeType),
+                    dailyPnl: position.unrealized_intraday_pl,
+                    currentStockPrice: position.current_price,
+                    netLiquidation: Math.abs(position.current_price * position.qty),
+                };
             }
             catch (error) {
                 if (error === 404) {
@@ -280,6 +339,212 @@ class AlpacaBrokerAPI {
                 // throw error;
             }
         });
+    }
+    getShefaStratgeyPosition(symbol) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const brokerPosition = yield this.alpaca.getPosition(symbol);
+                const brokerClosedOrders = yield this.fetchAllClosedOrders(symbol);
+                const lastTwoOrdersWithLegs = this.getTwoLastOrdersWithLegs(brokerClosedOrders);
+                const tradeType = (0, TradeType_1.getTradeTypeFromString)(brokerPosition.side);
+                const position = {
+                    symbol: symbol,
+                    type: tradeType,
+                    qty: Math.abs(brokerPosition.qty),
+                    entryPrice: parseFloat(brokerPosition.avg_entry_price),
+                };
+                position.pNl = parseFloat(brokerPosition.unrealized_pl);
+                const takeProfit = this.getTakeProfitOrderForShefaStratgey(lastTwoOrdersWithLegs, tradeType);
+                position.takeProfits = [takeProfit];
+                position.isTakenBaseProfit = takeProfit.isTaken;
+                const originalStopLoss = this.getOriginalStopLossForShefaStratgey(lastTwoOrdersWithLegs);
+                position.stopLossesHistory = [originalStopLoss];
+                position.entries = [
+                    {
+                        price: parseFloat(brokerPosition.avg_entry_price),
+                        qty: originalStopLoss.qty,
+                        date: new Date(lastTwoOrdersWithLegs[lastTwoOrdersWithLegs.length - 1].filled_at),
+                    },
+                ];
+                position.stopLosses = yield this.getStopLossesForShefaStratgey(symbol, position.type);
+                position.exits =
+                    this.getPositionExitsForShefaStratgey(brokerClosedOrders);
+                return position;
+            }
+            catch (error) {
+                if (error === 404) {
+                    // Position not found
+                    return null;
+                }
+                // throw error;
+            }
+        });
+    }
+    getTwoLastOrdersWithLegs(orders) {
+        const ordersWithLegs = [];
+        orders.reverse().forEach((order) => {
+            if (ordersWithLegs.length < 2 && order.legs) {
+                ordersWithLegs.push(order);
+            }
+        });
+        return ordersWithLegs;
+    }
+    getTakeProfitOrderForShefaStratgey(lastTwoOrdersWithLegs, positionType) {
+        let takeProfitPrice = 0;
+        let takeProfitQty = 0;
+        let isTakenBaseProfit = false;
+        for (let order of lastTwoOrdersWithLegs) {
+            order.legs.forEach((leg) => {
+                if (leg.limit_price &&
+                    (takeProfitPrice === 0 ||
+                        (positionType === TradeType_1.TradeType.LONG
+                            ? leg.limit_price < takeProfitPrice
+                            : leg.limit_price > takeProfitPrice))) {
+                    takeProfitPrice = parseFloat(leg.limit_price);
+                    takeProfitQty = parseInt(leg.qty);
+                    if (leg.filled_avg_price) {
+                        isTakenBaseProfit = true;
+                    }
+                }
+            });
+        }
+        return {
+            price: takeProfitPrice,
+            qty: takeProfitQty,
+            isTaken: isTakenBaseProfit,
+            date: lastTwoOrdersWithLegs[0].created_at,
+        };
+    }
+    getOriginalStopLossForShefaStratgey(lastTwoOrdersWithLegs) {
+        let stopLossPrice = 0;
+        let stopLossQty = 0;
+        let isTaken = false;
+        for (let order of lastTwoOrdersWithLegs) {
+            order.legs.forEach((leg) => {
+                if (leg.stop_price) {
+                    stopLossPrice = parseFloat(leg.stop_price);
+                    stopLossQty += parseInt(leg.qty);
+                    if (leg.filled_avg_price) {
+                        isTaken = true;
+                    }
+                    else {
+                        isTaken = false;
+                    }
+                }
+            });
+        }
+        return {
+            price: stopLossPrice,
+            qty: stopLossQty,
+            isTaken,
+            date: lastTwoOrdersWithLegs[0].created_at,
+        };
+    }
+    getStopLossesForShefaStratgey(symbol, tradeType) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let orders = yield this.fetchAllOrders(symbol);
+            orders = orders.slice(orders.length - 2, orders.length);
+            let isOrdersOriginalStopLosses = false;
+            orders.forEach((order) => {
+                if (order.legs) {
+                    isOrdersOriginalStopLosses = true;
+                }
+                else {
+                    isOrdersOriginalStopLosses = false;
+                }
+            });
+            if (isOrdersOriginalStopLosses) {
+                let stopLossPrice = 0;
+                let stopLossQty = 0;
+                let isStopLossTaken = false;
+                orders.forEach((order) => {
+                    order.legs.forEach((leg) => {
+                        if (leg.stop_price) {
+                            stopLossPrice = parseFloat(leg.stop_price);
+                            stopLossQty += parseInt(leg.qty);
+                            if (leg.filled_avg_price) {
+                                isStopLossTaken = true;
+                            }
+                            else {
+                                isStopLossTaken = false;
+                            }
+                        }
+                    });
+                });
+                return [
+                    {
+                        price: stopLossPrice,
+                        qty: stopLossQty,
+                        isTaken: isStopLossTaken,
+                        date: orders[0].created_at,
+                    },
+                ];
+            }
+            else if (
+            //is orders created at the same time. there might be a delay in the broker.
+            Math.abs(new Date(orders[0].created_at).getTime() -
+                new Date(orders[1].created_at).getTime()) < 30000) {
+                //הפקודות בסדר הנכון
+                const ordersInOriginalOrder = (orders[0].stop_price > orders[1].stop_price &&
+                    tradeType === TradeType_1.TradeType.LONG) ||
+                    (orders[0].stop_price < orders[1].stop_price &&
+                        tradeType === TradeType_1.TradeType.SHORT)
+                    ? [orders[0], orders[1]]
+                    : [orders[1], orders[0]];
+                return ordersInOriginalOrder.map((order) => {
+                    let isTaken = false;
+                    if (order.filled_avg_price) {
+                        isTaken = true;
+                    }
+                    return {
+                        price: parseFloat(order.stop_price),
+                        qty: parseInt(order.qty),
+                        isTaken: isTaken,
+                        date: order.created_at,
+                    };
+                });
+            }
+            else {
+                return [
+                    {
+                        price: parseFloat(orders[1].stop_price),
+                        qty: parseInt(orders[1].qty),
+                        isTaken: false,
+                        date: orders[1].created_at,
+                    },
+                ];
+            }
+        });
+    }
+    getPositionExitsForShefaStratgey(orders) {
+        const exits = [];
+        orders = orders.reverse();
+        const lastLegIndex = orders.findIndex((order) => order.legs) + 1;
+        orders.slice(lastLegIndex - 1, lastLegIndex + 1).forEach((order) => {
+            if (order.legs) {
+                order.legs.forEach((leg) => {
+                    if (leg.filled_avg_price) {
+                        exits.push({
+                            price: parseFloat(leg.filled_avg_price),
+                            qty: parseFloat(leg.qty),
+                            isTaken: true,
+                            date: new Date(leg.filled_at),
+                        });
+                    }
+                });
+            }
+        });
+        orders.slice(lastLegIndex + 1, orders.length).forEach((order) => {
+            if (order.filled_avg_price) {
+                exits.push({
+                    price: parseFloat(order.filled_avg_price),
+                    qty: parseFloat(order.qty),
+                    isTaken: true,
+                    date: new Date(order.filled_at),
+                });
+            }
+        });
+        return exits;
     }
     isInPosition(symbol) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -364,6 +629,7 @@ class AlpacaBrokerAPI {
                 });
             }
         });
+        ordersWithLegsOut = ordersWithLegsOut.sort((a, b) => new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime());
         ordersWithLegsOut = ordersWithLegsOut.sort((a, b) => new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime());
         const closedTrades = [];
         let symbol = "";
