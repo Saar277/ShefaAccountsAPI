@@ -10,6 +10,7 @@ const router = express.Router();
  * get all the examples
  */
 router.route("/positions").get(accounts_contoller_1.default.getAccountsPositions);
+router.route("/positions/:accountName").get(accounts_contoller_1.default.getAccountPositions);
 router.route("/values").get(accounts_contoller_1.default.getAccountsValuesHistory);
 router
     .route("/values/:accountName")
