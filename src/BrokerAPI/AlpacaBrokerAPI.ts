@@ -737,7 +737,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   }
 
   createTradesFromOrders(orders: any[]) {
-    const ordersWithLegsOut: any[] = [];
+    let ordersWithLegsOut: any[] = [];
     orders.forEach((order) => {
       ordersWithLegsOut.push(order);
 
@@ -756,6 +756,11 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         );
       }
     });
+
+    ordersWithLegsOut = ordersWithLegsOut.sort(
+      (a, b) =>
+        new Date(a.filled_at).getTime() - new Date(b.filled_at).getTime()
+    );
 
     const closedTrades: {
       symbol: string;
