@@ -28,8 +28,8 @@ export const accountsInfo = [
   },
   {
     NAME: "test",
-    API_KEY: "PKR6QHZ6I6IMY0W96YHT",
-    API_SECRET: "RPBw7Tg2eCP9XfawIgjq2z0oLyJc22HFkHqzeq4M",
+    API_KEY: "PK2XUCJDV9O3TAQQ91LV",
+    API_SECRET: "eRI9aZdebeUIrV8KE0Ajsp97D1hAB9gBok0qAGGE",
     STRATEGY: StrategyType.SHEFA
   }
 ];
