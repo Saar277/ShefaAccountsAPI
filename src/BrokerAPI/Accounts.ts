@@ -9,13 +9,16 @@ import {
   mapAccountValueInDateToPnlInEveryYear,
   filterTradesByTimeRange,
   getSmaValuesFromBars,
+  findLocalMinimaMaximaIndices,
 } from "../utils/utils";
-import e from "express";
-import Bar from "../models/Bar";
+import Bar from "../models/Bar/Bar";
 
 export class Accounts {
-  private static accounts: { iBrokerAPI: IBrokerAPI; name: string }[] =
-    this.intalizeAccounts();
+  private static accounts: {
+    iBrokerAPI: IBrokerAPI;
+    name: string;
+    strategy?: string;
+  }[] = this.intalizeAccounts();
 
   public static getAccounts() {
     return this.accounts;
@@ -29,6 +32,7 @@ export class Accounts {
           accountInfo.API_SECRET
         ),
         name: accountInfo.NAME,
+        strategy: accountInfo.STRATEGY
       };
     });
   }
@@ -40,7 +44,9 @@ export class Accounts {
       this.accounts.map(async (account) => {
         return {
           accountName: account.name,
-          positions: await account.iBrokerAPI.getPositions(),
+          positions: await account.iBrokerAPI.getPositionsForStrategy(
+            account.strategy
+          ),
         };
       })
     );
@@ -282,7 +288,7 @@ export class Accounts {
     return this.accounts.map((account) => account.name);
   }
 
-  public static async getBarsWithOrders(
+  public static async getBarsWithOrdersAndStopLossesAndTakeProfits(
     accountName: string,
     symbol: string,
     timeFrame: number,
@@ -298,6 +304,7 @@ export class Accounts {
       const startDate = new Date(
         orders[0].date.getTime() - fiveDaysInMilliseconds
       ).toISOString();
+
       const bars = await account.iBrokerAPI.getBars(
         symbol,
         timeFrame,
@@ -306,16 +313,20 @@ export class Accounts {
         startDate
       );
 
+      const position = await account.iBrokerAPI.getPositionForStrategy(symbol, account.strategy);
+
       return {
         orders: orders,
         bars: bars,
+        stopLosses: position?.stopLosses || [],
+        takeProfits: position?.takeProfits || [],
       };
     } catch (error) {
       console.log(error);
     }
   }
 
-  public static async getBarsWithOrdersWithSma(
+  public static async getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(
     accountName: string,
     symbol: string,
     timeFrame: number,
@@ -323,27 +334,64 @@ export class Accounts {
     smaLength: number
   ) {
     try {
-      const account = this.accounts.find(
-        (account) => account.name === accountName
-      );
-      const orders = await account.iBrokerAPI.getOrdersBySymbol(symbol);
+      const { orders, bars, stopLosses, takeProfits } =
+        await this.getBarsWithOrdersAndStopLossesAndTakeProfits(
+          accountName,
+          symbol,
+          timeFrame,
+          timeFrameUnit
+        );
 
-      const fiveDaysInMilliseconds: number = 432000000;
-      const startDate = new Date(
-        orders[0].date.getTime() - fiveDaysInMilliseconds
-      ).toISOString();
-      const bars: Bar[] = await account.iBrokerAPI.getBars(
-        symbol,
-        timeFrame,
-        timeFrameUnit,
-        true,
-        startDate
+      return {
+        orders: orders,
+        bars: bars,
+        smaValues: getSmaValuesFromBars(bars, smaLength),
+        stopLosses: stopLosses,
+        takeProfits: takeProfits,
+      };
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  public static async getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(
+    accountName: string,
+    symbol: string,
+    timeFrame: number,
+    timeFrameUnit: string,
+    rollingWindow: number
+  ) {
+    try {
+      const { orders, bars, stopLosses, takeProfits } =
+        await this.getBarsWithOrdersAndStopLossesAndTakeProfits(
+          accountName,
+          symbol,
+          timeFrame,
+          timeFrameUnit
+        );
+
+      const { minima, maxima } = findLocalMinimaMaximaIndices(
+        bars,
+        rollingWindow
       );
 
       return {
         orders: orders,
         bars: bars,
-        smaValues: getSmaValuesFromBars(bars, smaLength)
+        minPoints: minima.map((bar) => {
+          return {
+            pricePoint: bar.pricePoint,
+            time: bar.time,
+          };
+        }),
+        maxPoints: maxima.map((bar) => {
+          return {
+            pricePoint: bar.pricePoint,
+            time: bar.time,
+          };
+        }),
+        stopLosses: stopLosses,
+        takeProfits: takeProfits,
       };
     } catch (error) {
       console.log(error);

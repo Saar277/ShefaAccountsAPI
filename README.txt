@@ -105,7 +105,7 @@ get accounts names:
 route: /accounts/names
 return: string[]
 
-get stock bars and orders for specific account:
+get stock bars and orders and stopLosses and takeProfits for specific account:
 this query get: account name, symbol, timeFrame (every number) and timeFrameUnit (Day, Hour, Min, Month, Week)
 route: /accounts/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit
 return:
@@ -123,11 +123,14 @@ return:
     lowPrice: number,
     time: Date
   }[];
+  stopLosses: OrderPoint[];
+  takeProfits: OrderPoint[];
 }
 
-get stock bars and orders and sma values for specific account:
+get stock bars and orders and sma values and stopLosses and takeProfits for specific account:
 this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week) and sma length
-route: /accounts/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength
+route: /accounts/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength *** THIS IS THE OLD ONE. NEED TO DELETE IT AFTER THE FRONT WILL USE THE ROUTE BELOW ***
+route: /accounts/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength
 return:
 {
   orders: {
@@ -147,6 +150,32 @@ return:
     date: Date,
     value: number
   }[];
+  stopLosses: OrderPoint[];
+  takeProfits: OrderPoint[];
+}
+
+get stock bars and orders and MinMaxPoints and stopLosses and takeProfits for specific account:
+this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week) and rollingWindow
+route: /accounts/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:rollingWindow
+return:
+{
+  orders: {
+    price: number,
+    qty: number,
+    date: Date,
+    type: string (buy or sell)
+  }[];
+  bars: {
+    openPrice: number,
+    closePrice: number,
+    highPrice: number,
+    lowPrice: number,
+    time: Date
+  }[];
+  minPoints: {pricePoint: number, time: Date}[];
+  maxPoints: {pricePoint: number, time: Date}[];
+  stopLosses: OrderPoint[];
+  takeProfits: OrderPoint[];
 }
 
 MODELS: #(maybe this model changed. it is better to see the models in /src/models)
@@ -163,11 +192,20 @@ Position {
   dailyPnl: number;
   currentStockPrice: number;
   netLiquidation: number;
-  stopLosses?: { price: number; qty: number; isTaken?: boolean }[];
-  takeProfits?: { price: number; qty: number }[];
+  stopLosses?: OrderPoint[];
+  takeProfits?: OrderPoint[];
   isTakenBaseProfit?: boolean;
-  stopLossesHistory?: { price: number; qty: number }[];
+  stopLossesHistory?: OrderPoint[];
+  entries?: OrderPoint[];
+  exits?: OrderPoint[];
 }
+
+OrderPoint = {
+  price: number;
+  qty: number;
+  isTaken?: boolean;
+  date?: Date;
+};
 
 TradeType {
   LONG = "LONG",

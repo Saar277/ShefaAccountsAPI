@@ -44,10 +44,18 @@ router.route("/names").get(accountsContoller.getAccountsNames);
 
 router
   .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit")
-  .get(accountsContoller.getBarsWithOrders);
+  .get(accountsContoller.getBarsWithOrdersAndStopLossesAndTakeProfits);
 
   router
   .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
-  .get(accountsContoller.getBarsWithOrdersWithSma);
+  .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits); //TODO: delete it after the front use the route below
+
+  router
+  .route("/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
+  .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits);
+
+  router
+  .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:rollingWindow")
+  .get(accountsContoller.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits);
 
 module.exports = router;
