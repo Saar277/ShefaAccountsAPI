@@ -25,7 +25,7 @@ const utils_1 = require("../utils/utils");
 const TradeType_1 = require("../models/TradeType");
 const lodash_1 = require("lodash");
 const moment_timezone_1 = __importDefault(require("moment-timezone"));
-const strategiesTypes_1 = require("../strategiesTypes");
+const strategiesTypes_1 = require("../models/strategiesTypes");
 class AlpacaBrokerAPI {
     constructor(apiKey, apiSecret) {
         this.apiKey = apiKey;
@@ -273,39 +273,46 @@ class AlpacaBrokerAPI {
             return positions.length !== 0
                 ? positions
                     .map((position) => {
-                    const tradeType = (0, TradeType_1.getTradeTypeFromString)(position.side);
-                    return {
-                        symbol: position.symbol,
-                        type: tradeType,
-                        qty: position.qty,
-                        entryPrice: position.avg_entry_price,
-                        pNl: position.unrealized_pl,
-                        percentPnL: (0, utils_1.calclautePercentagePnL)(position.avg_entry_price, position.current_price, tradeType),
-                        dailyPnl: position.unrealized_intraday_pl,
-                        currentStockPrice: position.current_price,
-                        netLiquidation: Math.abs(position.current_price * position.qty),
-                    };
+                    return this.convertAlpacaPositionToPosition(position);
                 })
                     .sort((a, b) => b.pNl - a.pNl)
                 : [];
         });
     }
-    getPositionsForStrategy(strategy) {
+    getFifteenMinTSLAFromGuetaStratgeyPositions(stopLossPercent) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (strategy === strategiesTypes_1.StrategyType.SHEFA) {
+            const positions = yield this.alpaca.getPositions();
+            return positions.length !== 0
+                ? positions
+                    .map((position) => {
+                    return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(this.convertAlpacaPositionToPosition(position), stopLossPercent);
+                })
+                    .sort((a, b) => b.pNl - a.pNl)
+                : [];
+        });
+    }
+    getPositionsForStrategy(account) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (account.strategy === strategiesTypes_1.StrategyType.SHEFA) {
                 return yield (yield this.alpaca.getPositions()).map((position) => __awaiter(this, void 0, void 0, function* () {
                     return yield this.getShefaStratgeyPosition(position.symbol);
                 }));
+            }
+            else if (account.strategy === strategiesTypes_1.StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA) {
+                return yield this.getFifteenMinTSLAFromGuetaStratgeyPositions(account.defaultStopLossPercentInTrade);
             }
             else {
                 return yield this.getPositions();
             }
         });
     }
-    getPositionForStrategy(symbol, strategy) {
+    getPositionForStrategy(symbol, account) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (strategy === strategiesTypes_1.StrategyType.SHEFA) {
+            if (account.strategy === strategiesTypes_1.StrategyType.SHEFA) {
                 return yield this.getShefaStratgeyPosition(symbol);
+            }
+            else if (account.strategy === strategiesTypes_1.StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA) {
+                return yield this.getFifteenMinTSLAFromGuetaStratgeyPosition(symbol, account.defaultStopLossPercentInTrade);
             }
             else {
                 return yield this.getPosition(symbol);
@@ -316,20 +323,7 @@ class AlpacaBrokerAPI {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const position = yield this.alpaca.getPosition(symbol);
-                const tradeType = (0, TradeType_1.getTradeTypeFromString)(position.side);
-                return {
-                    id: undefined,
-                    symbol: position.symbol,
-                    type: tradeType,
-                    qty: position.qty,
-                    entryPrice: position.avg_entry_price,
-                    entryTime: undefined,
-                    pNl: position.unrealized_pl,
-                    percentPnL: (0, utils_1.calclautePercentagePnL)(position.avg_entry_price, position.current_price, tradeType),
-                    dailyPnl: position.unrealized_intraday_pl,
-                    currentStockPrice: position.current_price,
-                    netLiquidation: Math.abs(position.current_price * position.qty),
-                };
+                return this.convertAlpacaPositionToPosition(position);
             }
             catch (error) {
                 if (error === 404) {
@@ -338,6 +332,11 @@ class AlpacaBrokerAPI {
                 }
                 // throw error;
             }
+        });
+    }
+    getFifteenMinTSLAFromGuetaStratgeyPosition(symbol, stopLossPercent) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(this.convertAlpacaPositionToPosition(yield this.alpaca.getPosition(symbol)), stopLossPercent);
         });
     }
     getShefaStratgeyPosition(symbol) {
@@ -382,6 +381,7 @@ class AlpacaBrokerAPI {
                     : originalStopLoss.price - position.entryPrice;
                 position.ratio =
                     (exitsPnL + position.pNl) / (originalStopLossPerStock * position.qty);
+                position.overAllPnL = exitsPnL + position.pNl;
                 return position;
             }
             catch (error) {
@@ -531,12 +531,12 @@ class AlpacaBrokerAPI {
     }
     getPositionExitsForShefaStratgey(orders) {
         const exits = [];
-        orders = orders.reverse();
-        const lastLegIndex = orders.findIndex((order) => order.legs) + 1;
-        orders.slice(lastLegIndex - 1, lastLegIndex + 1).forEach((order) => {
+        orders = [...orders].reverse();
+        const lastLegIndex = orders.findIndex((order) => order.legs);
+        orders.slice(lastLegIndex, lastLegIndex + 2).forEach((order) => {
             if (order.legs) {
                 order.legs.forEach((leg) => {
-                    if (leg.filled_avg_price) {
+                    if (leg.filled_avg_price && leg.limit_price) {
                         exits.push({
                             price: parseFloat(leg.filled_avg_price),
                             qty: parseFloat(leg.qty),
@@ -547,7 +547,7 @@ class AlpacaBrokerAPI {
                 });
             }
         });
-        orders.slice(lastLegIndex + 1, orders.length).forEach((order) => {
+        orders.slice(0, lastLegIndex).forEach((order) => {
             if (order.filled_avg_price) {
                 exits.push({
                     price: parseFloat(order.filled_avg_price),
@@ -586,11 +586,11 @@ class AlpacaBrokerAPI {
             return accountValuesHistory;
         });
     }
-    getClosedTrades() {
+    getClosedTrades(account) {
         return __awaiter(this, void 0, void 0, function* () {
             const orders = this.sortOrdersBySymbol(yield this.fetchAllClosedOrders());
             try {
-                return this.createTradesFromOrders(orders).sort((a, b) => b.entryTime.getTime() - a.entryTime.getTime());
+                return this.createTradesFromOrders(orders, account).sort((a, b) => b.entryTime.getTime() - a.entryTime.getTime());
             }
             catch (error) {
                 console.log(error);
@@ -617,7 +617,7 @@ class AlpacaBrokerAPI {
                 index++;
             }
             return allOrders
-                .filter((order) => parseInt(order.filled_qty) > 0)
+                .filter((order) => parseInt(order.filled_qty) > 0 || order.status !== "canceled")
                 .reverse();
         });
     }
@@ -635,7 +635,7 @@ class AlpacaBrokerAPI {
             return 0;
         });
     }
-    createTradesFromOrders(orders) {
+    createTradesFromOrders(orders, account) {
         let ordersWithLegsOut = [];
         orders.forEach((order) => {
             ordersWithLegsOut.push(order);
@@ -697,7 +697,11 @@ class AlpacaBrokerAPI {
                     });
                     exitQty += qty;
                     if (entryQty === exitQty) {
-                        closedTrades.push((0, utils_1.createTradeFromOrdersData)(symbol, entries, exits, entryQty, tradeType, originalStopLossPrice));
+                        closedTrades.push((0, utils_1.createTradeFromOrdersData)(symbol, entries, exits, entryQty, tradeType, (account === null || account === void 0 ? void 0 : account.strategy) === strategiesTypes_1.StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA
+                            ? entries[0].price -
+                                (account.defaultStopLossPercentInTrade / 100) *
+                                    entries[0].price
+                            : originalStopLossPrice, account));
                         symbol = "";
                         entries = [];
                         exits = [];
@@ -810,6 +814,35 @@ class AlpacaBrokerAPI {
         else if (str === "Week") {
             return entityv2_1.TimeFrameUnit.WEEK;
         }
+    }
+    convertAlpacaPositionToPosition(alpacaPosition) {
+        const tradeType = (0, TradeType_1.getTradeTypeFromString)(alpacaPosition.side);
+        return {
+            id: undefined,
+            symbol: alpacaPosition.symbol,
+            type: tradeType,
+            qty: alpacaPosition.qty,
+            entryPrice: alpacaPosition.avg_entry_price,
+            entryTime: undefined,
+            pNl: alpacaPosition.unrealized_pl,
+            percentPnL: (0, utils_1.calclautePercentagePnL)(alpacaPosition.avg_entry_price, alpacaPosition.current_price, tradeType),
+            dailyPnl: alpacaPosition.unrealized_intraday_pl,
+            currentStockPrice: alpacaPosition.current_price,
+            netLiquidation: Math.abs(alpacaPosition.current_price * alpacaPosition.qty),
+        };
+    }
+    addDataToFifteenMinTSLAFromGuetaStratgeyPosition(position, stopLossPercent) {
+        const stopLossPrice = position.entryPrice - (stopLossPercent / 100) * position.entryPrice;
+        position.stopLosses = [
+            {
+                price: stopLossPrice,
+                qty: position.qty,
+            },
+        ];
+        position.stopLossesHistory = [...position.stopLosses];
+        position.ratio =
+            position.pNl / ((position.entryPrice - stopLossPrice) * position.qty);
+        return position;
     }
 }
 AlpacaBrokerAPI.baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing

@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findLocalMinimaMaximaIndices = exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
+exports.findLocalMinimaMaximaIndices = exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.getTradeRatio = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
 const TradeType_1 = require("../models/TradeType");
 const MinMaxBar_1 = require("../models/Bar/MinMaxBar");
+const strategiesTypes_1 = require("../models/strategiesTypes");
 const calclautePercentagePnL = (entryPrice, closePrice, tradeType) => {
     return ((tradeType === TradeType_1.TradeType.LONG
         ? (closePrice - entryPrice) / entryPrice
@@ -23,11 +24,11 @@ const calculateAvgPrice = (priceAndQty) => {
     }
     return totalQty === 0 ? 0 : totalCost / totalQty;
 };
-const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType, originalStopLossPrice) => {
+const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType, originalStopLossPrice, account) => {
     const entryPrice = calculateAvgPrice(entries);
     const closePrice = calculateAvgPrice(exits);
     const pNl = calclautePnL(entryPrice, closePrice, tradeType, qty);
-    return {
+    const trade = {
         symbol: symbol,
         type: tradeType,
         qty: qty,
@@ -39,16 +40,40 @@ const createTradeFromOrdersData = (symbol, entries, exits, qty, tradeType, origi
         closeTime: new Date(exits[exits.length - 1].date),
         entries: entries,
         exits: exits,
-        ratio: originalStopLossPrice && pNl > 0
-            ? pNl /
+    };
+    if (originalStopLossPrice) {
+        trade.stopLosses = [
+            {
+                price: originalStopLossPrice,
+                qty: qty,
+            },
+        ];
+    }
+    const ratio = (0, exports.getTradeRatio)(pNl, originalStopLossPrice, tradeType, entryPrice, qty, account);
+    if (ratio) {
+        trade.ratio = ratio;
+    }
+    return trade;
+};
+exports.createTradeFromOrdersData = createTradeFromOrdersData;
+const getTradeRatio = (pNl, originalStopLossPrice, tradeType, entryPrice, qty, account) => {
+    if (pNl > 0) {
+        if (originalStopLossPrice) {
+            return (pNl /
                 ((tradeType === TradeType_1.TradeType.LONG
                     ? entryPrice - originalStopLossPrice
                     : originalStopLossPrice - entryPrice) *
-                    qty)
-            : null,
-    };
+                    qty));
+        }
+        else if (account &&
+            account.strategy &&
+            account.strategy === strategiesTypes_1.StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA) {
+            return pNl / ((entryPrice - originalStopLossPrice) * qty);
+        }
+    }
+    return null;
 };
-exports.createTradeFromOrdersData = createTradeFromOrdersData;
+exports.getTradeRatio = getTradeRatio;
 const mapAccountValueInDateToPnlInEveryMonth = (accountValuesInDates) => {
     return Object.values(accountValuesInDates.reduce((acc, obj) => {
         // Extract the month and year from the date
