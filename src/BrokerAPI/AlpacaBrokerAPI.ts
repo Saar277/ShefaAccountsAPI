@@ -712,6 +712,11 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     symbol?: string,
     startDateInMilliseconds?: number
   ) {
+    const twoYearsInMilliseconds = 63113904000;
+    startDateInMilliseconds = startDateInMilliseconds ? Math.max(
+      startDateInMilliseconds,
+      new Date(new Date().getTime() - twoYearsInMilliseconds).getTime()
+    ) : null;
     const thirtyDaysInMilliseconds: number = 2592000000;
     let allOrders: any[] = [];
 
@@ -887,7 +892,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     );
   }
 
-  async getOrdersBySymbol(symbol: string): Promise<
+  async getOrdersBySymbol(symbol: string, startDateInMilliseconds?: number): Promise<
     {
       price: number;
       qty: number;
@@ -900,7 +905,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
           { price: number; qty: number; date: Date; type: "buy" | "sell" }[]
         >
       | { price: number; qty: number; date: Date; type: any }[] = [];
-    const brokerOrders = await this.fetchAllClosedOrders(symbol);
+    const brokerOrders = await this.fetchAllClosedOrders(symbol, startDateInMilliseconds);
 
     brokerOrders.forEach((order) => {
       orders.push({
