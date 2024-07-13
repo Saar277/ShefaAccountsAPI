@@ -53,11 +53,11 @@ router
   .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits); //TODO: delete it after the front use the route below
 
   router
-  .route("/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
+  .route("/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:smaLength")
   .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits);
 
   router
-  .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:rollingWindow")
+  .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:rollingWindow")
   .get(accountsContoller.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits);
 
 module.exports = router;

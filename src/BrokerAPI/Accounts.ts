@@ -313,7 +313,7 @@ export class Accounts {
 
       const fiveDaysInMilliseconds: number = 432000000;
       const startDate = startDateInMilliseconds
-        ? new Date(new Date().getTime() - startDateInMilliseconds).toISOString()
+        ? new Date(startDateInMilliseconds).toISOString()
         : new Date(
             orders[0].date.getTime() - fiveDaysInMilliseconds
           ).toISOString();
@@ -347,7 +347,8 @@ export class Accounts {
     symbol: string,
     timeFrame: number,
     timeFrameUnit: string,
-    smaLength: number
+    smaLength: number,
+    startDateInMilliseconds?: number
   ) {
     try {
       const { orders, bars, stopLosses, takeProfits } =
@@ -355,7 +356,8 @@ export class Accounts {
           accountName,
           symbol,
           timeFrame,
-          timeFrameUnit
+          timeFrameUnit,
+          startDateInMilliseconds
         );
 
       return {
@@ -375,7 +377,8 @@ export class Accounts {
     symbol: string,
     timeFrame: number,
     timeFrameUnit: string,
-    rollingWindow: number
+    rollingWindow: number,
+    startDateInMilliseconds?: number
   ) {
     try {
       const { orders, bars, stopLosses, takeProfits } =
@@ -383,7 +386,8 @@ export class Accounts {
           accountName,
           symbol,
           timeFrame,
-          timeFrameUnit
+          timeFrameUnit,
+          startDateInMilliseconds
         );
 
       const { minima, maxima } = findLocalMinimaMaximaIndices(

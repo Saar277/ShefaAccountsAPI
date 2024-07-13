@@ -128,9 +128,9 @@ return:
 }
 
 get stock bars and orders and sma values and stopLosses and takeProfits for specific account:
-this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week) and sma length
+this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week), start milliseconds and sma length
 route: /accounts/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength *** THIS IS THE OLD ONE. NEED TO DELETE IT AFTER THE FRONT WILL USE THE ROUTE BELOW ***
-route: /accounts/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength
+route: /accounts/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:smaLength
 return:
 {
   orders: {
@@ -155,8 +155,8 @@ return:
 }
 
 get stock bars and orders and MinMaxPoints and stopLosses and takeProfits for specific account:
-this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week) and rollingWindow
-route: /accounts/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:rollingWindow
+this query get: account name, symbol, timeFrame (every number), timeFrameUnit (Day, Hour, Min, Month, Week), start milliseconds and rollingWindow
+route: /accounts/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:rollingWindow
 return:
 {
   orders: {

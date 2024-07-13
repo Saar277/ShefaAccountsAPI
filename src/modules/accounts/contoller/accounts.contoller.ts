@@ -174,7 +174,8 @@ class AccountsController {
             req.params.symbol,
             parseInt(req.params.timeFrame),
             req.params.TimeFrameUnit,
-            parseInt(req.params.smaLength)
+            parseInt(req.params.smaLength),
+            parseFloat(req.params.startMilliseconds)
           )
         );
     } catch {
@@ -192,7 +193,8 @@ class AccountsController {
             req.params.symbol,
             parseInt(req.params.timeFrame),
             req.params.TimeFrameUnit,
-            parseInt(req.params.rollingWindow)
+            parseInt(req.params.rollingWindow),
+            parseFloat(req.params.startMilliseconds)
           )
         );
     } catch {
