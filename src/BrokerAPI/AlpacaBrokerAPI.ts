@@ -381,12 +381,16 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     symbol: string,
     stopLossPercent: number
   ) {
-    return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
-      this.convertAlpacaPositionToPosition(
-        await this.alpaca.getPosition(symbol)
-      ),
-      stopLossPercent
-    );
+    try {
+      return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
+        this.convertAlpacaPositionToPosition(
+          await this.alpaca.getPosition(symbol)
+        ),
+        stopLossPercent
+      );
+    } catch (error) {
+      return null;
+    }
   }
 
   async getShefaStratgeyPosition(symbol: string): Promise<Position | null> {
@@ -704,23 +708,33 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     }
   }
 
-  async fetchAllClosedOrders(symbol?: string) {
+  async fetchAllClosedOrders(
+    symbol?: string,
+    startDateInMilliseconds?: number
+  ) {
     const thirtyDaysInMilliseconds: number = 2592000000;
     let allOrders: any[] = [];
 
     let orders = [];
     let index = 1;
+    let after = new Date(
+      new Date().getTime() - thirtyDaysInMilliseconds * index
+    );
+    let until = new Date(
+      new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)
+    );
 
-    while (orders.length !== 0 || index == 1) {
+    while (
+      (orders.length !== 0 || index == 1) &&
+      (startDateInMilliseconds
+        ? until.getTime() >= startDateInMilliseconds
+        : true)
+    ) {
       orders = await this.alpaca.getOrders({
         status: "closed",
         limit: 500, //the limit of the api,
-        after: new Date(
-          new Date().getTime() - thirtyDaysInMilliseconds * index
-        ).toISOString(),
-        until: new Date(
-          new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)
-        ).toISOString(),
+        after: after.toISOString(),
+        until: until.toISOString(),
         direction: "desc",
         nested: "true",
         symbols: symbol !== undefined ? symbol : "",
@@ -728,6 +742,11 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
       allOrders = allOrders.concat(orders);
       index++;
+
+      after = new Date(new Date().getTime() - thirtyDaysInMilliseconds * index);
+      until = new Date(
+        new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)
+      );
     }
 
     return allOrders

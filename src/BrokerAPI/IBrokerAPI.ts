@@ -69,7 +69,7 @@ interface IBrokerAPI {
   isClockOpen(): Promise<boolean>;
   closePosition(symbol: string): void;
   getAllOrdersSymbols(): Promise<string[]>;
-  getOrdersBySymbol(symbol: string): any;
+  getOrdersBySymbol(symbol: string, startDateInMilliseconds?: number): any;
 }
 
 export default IBrokerAPI;

@@ -298,18 +298,25 @@ export class Accounts {
     accountName: string,
     symbol: string,
     timeFrame: number,
-    timeFrameUnit: string
+    timeFrameUnit: string,
+    startDateInMilliseconds?: number
   ) {
     try {
       const account = this.accounts.find(
         (account) => account.name === accountName
       );
-      const orders = await account.iBrokerAPI.getOrdersBySymbol(symbol);
+
+      const orders = await account.iBrokerAPI.getOrdersBySymbol(
+        symbol,
+        startDateInMilliseconds
+      );
 
       const fiveDaysInMilliseconds: number = 432000000;
-      const startDate = new Date(
-        orders[0].date.getTime() - fiveDaysInMilliseconds
-      ).toISOString();
+      const startDate = startDateInMilliseconds
+        ? new Date(new Date().getTime() - startDateInMilliseconds).toISOString()
+        : new Date(
+            orders[0].date.getTime() - fiveDaysInMilliseconds
+          ).toISOString();
 
       const bars = await account.iBrokerAPI.getBars(
         symbol,
