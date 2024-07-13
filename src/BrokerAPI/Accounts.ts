@@ -11,20 +11,16 @@ import {
   getSmaValuesFromBars,
   findLocalMinimaMaximaIndices,
 } from "../utils/utils";
-import Bar from "../models/Bar/Bar";
+import { AccountInfo } from "../models/AccountInfo";
 
 export class Accounts {
-  private static accounts: {
-    iBrokerAPI: IBrokerAPI;
-    name: string;
-    strategy?: string;
-  }[] = this.intalizeAccounts();
+  private static accounts: AccountInfo[] = this.intalizeAccounts();
 
   public static getAccounts() {
     return this.accounts;
   }
 
-  public static intalizeAccounts(): { iBrokerAPI: IBrokerAPI; name: string }[] {
+  public static intalizeAccounts(): any[] {
     return accountsInfo.map((accountInfo) => {
       return {
         iBrokerAPI: new AlpacaBrokerAPI(
@@ -33,6 +29,8 @@ export class Accounts {
         ),
         name: accountInfo.NAME,
         strategy: accountInfo.STRATEGY,
+        defaultStopLossPercentInTrade:
+          accountInfo.DEFAULT_STOP_LOSS_PERCENT_IN_TRADE,
       };
     });
   }
@@ -44,9 +42,7 @@ export class Accounts {
       this.accounts.map(async (account) => {
         return {
           accountName: account.name,
-          positions: await account.iBrokerAPI.getPositionsForStrategy(
-            account.strategy
-          ),
+          positions: await account.iBrokerAPI.getPositionsForStrategy(account),
         };
       })
     );
@@ -59,7 +55,7 @@ export class Accounts {
       (account) => account.name === accountName
     );
 
-    return await account.iBrokerAPI.getPositionsForStrategy(account.strategy);
+    return await account.iBrokerAPI.getPositionsForStrategy(account);
   }
 
   public static async getAccountsValuesHistory(): Promise<
@@ -127,16 +123,18 @@ export class Accounts {
       this.accounts.map(async (account) => {
         return {
           accountName: account.name,
-          trades: await account.iBrokerAPI.getClosedTrades(),
+          trades: await account.iBrokerAPI.getClosedTrades(account),
         };
       })
     );
   }
 
   public static async getClosedTradesForAccount(accountName: string) {
-    return await this.accounts
-      .find((account) => account.name === accountName)
-      .iBrokerAPI.getClosedTrades();
+    const account = this.accounts.find(
+      (account) => account.name === accountName
+    );
+
+    return await account.iBrokerAPI.getClosedTrades(account);
   }
 
   private static async getStartMoneyAmount(
@@ -158,9 +156,7 @@ export class Accounts {
   public static async getAccountTradesStatistics(
     accountName: string
   ): Promise<Statistics> {
-    const trades = await this.accounts
-      .find((account) => account.name === accountName)
-      .iBrokerAPI.getClosedTrades();
+    const trades = await this.getClosedTradesForAccount(accountName);
 
     const startMoneyAmount: number = await this.getStartMoneyAmount(
       accountName
@@ -200,6 +196,7 @@ export class Accounts {
       ),
       longPrecentage: longTradesPrecentage,
       shortPrecentage: 100 - longTradesPrecentage,
+      startDate: trades[trades.length - 1]?.entryTime,
     };
   }
 
@@ -209,9 +206,7 @@ export class Accounts {
     endDateInMilliseconds: number
   ): Promise<Statistics> {
     const trades = filterTradesByTimeRange(
-      await this.accounts
-        .find((account) => account.name === accountName)
-        .iBrokerAPI.getClosedTrades(),
+      await this.getClosedTradesForAccount(accountName),
       startDateInMilliseconds,
       endDateInMilliseconds
     );
@@ -257,6 +252,7 @@ export class Accounts {
       ),
       longPrecentage: longTradesPrecentage,
       shortPrecentage: 100 - longTradesPrecentage,
+      startDate: trades[trades.length - 1]?.entryTime,
     };
   }
 
@@ -325,7 +321,7 @@ export class Accounts {
 
       const position = await account.iBrokerAPI.getPositionForStrategy(
         symbol,
-        account.strategy
+        account
       );
 
       return {

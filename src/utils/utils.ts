@@ -2,6 +2,10 @@ import { MinMaxBar } from "../models/Bar/MinMaxBar";
 import Bar from "../models/Bar/Bar";
 import { TradeType } from "../models/TradeType";
 import { MinMaxType } from "../models/Bar/MinMaxBar";
+import { Trade } from "../models/Trade";
+import { AccountInfo } from "../models/AccountInfo";
+import { StrategyType } from "../models/strategiesTypes";
+import e from "express";
 
 export const calclautePercentagePnL = (
   entryPrice: number,
@@ -46,14 +50,15 @@ export const createTradeFromOrdersData = (
   exits: any[],
   qty: number,
   tradeType: TradeType,
-  originalStopLossPrice: number
-) => {
+  originalStopLossPrice: number,
+  account?: AccountInfo
+): Trade => {
   const entryPrice: number = calculateAvgPrice(entries);
   const closePrice: number = calculateAvgPrice(exits);
 
   const pNl = calclautePnL(entryPrice, closePrice, tradeType, qty);
 
-  return {
+  const trade: Trade = {
     symbol: symbol,
     type: tradeType,
     qty: qty,
@@ -65,15 +70,60 @@ export const createTradeFromOrdersData = (
     closeTime: new Date(exits[exits.length - 1].date),
     entries: entries,
     exits: exits,
-    ratio:
-      originalStopLossPrice && pNl > 0
-        ? pNl /
-          ((tradeType === TradeType.LONG
-            ? entryPrice - originalStopLossPrice
-            : originalStopLossPrice - entryPrice) *
-            qty)
-        : null,
   };
+
+  if (originalStopLossPrice) {
+    trade.stopLosses = [
+      {
+        price: originalStopLossPrice,
+        qty: qty,
+      },
+    ];
+  }
+
+  const ratio = getTradeRatio(
+    pNl,
+    originalStopLossPrice,
+    tradeType,
+    entryPrice,
+    qty,
+    account
+  );
+
+  if (ratio) {
+    trade.ratio = ratio;
+  }
+
+  return trade;
+};
+
+export const getTradeRatio = (
+  pNl: number,
+  originalStopLossPrice: number,
+  tradeType: TradeType,
+  entryPrice: number,
+  qty: number,
+  account: AccountInfo
+): number => {
+  if (pNl > 0) {
+    if (originalStopLossPrice) {
+      return (
+        pNl /
+        ((tradeType === TradeType.LONG
+          ? entryPrice - originalStopLossPrice
+          : originalStopLossPrice - entryPrice) *
+          qty)
+      );
+    } else if (
+      account &&
+      account.strategy &&
+      account.strategy === StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA
+    ) {
+      return pNl / ((entryPrice - originalStopLossPrice) * qty);
+    }
+  }
+
+  return null;
 };
 
 export const mapAccountValueInDateToPnlInEveryMonth = (
