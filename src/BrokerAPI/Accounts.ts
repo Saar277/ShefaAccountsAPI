@@ -10,6 +10,7 @@ import {
   filterTradesByTimeRange,
   getSmaValuesFromBars,
   findLocalMinimaMaximaIndices,
+  mapAccountValueInDateToPnlInEveryDay,
 } from "../utils/utils";
 import { AccountInfo } from "../models/AccountInfo";
 
@@ -105,17 +106,21 @@ export class Accounts {
     });
   }
 
-  public static async getAccountPnlInEveryMonthOrYear(
+  public static async getAccountPnlInEveryMonthOrYearOrDay(
     accountName: string,
-    monthOrYear: "month" | "year" | string
+    monthOrYearOrDay: "month" | "year" | "day" | string
   ): Promise<{ date: Date; pNl: number }[]> {
     const accountValuesInDates = await this.accounts
       .find((account) => account.name === accountName)
       .iBrokerAPI.getAccountValuesHistory();
 
-    return monthOrYear === "month"
-      ? mapAccountValueInDateToPnlInEveryMonth(accountValuesInDates)
-      : mapAccountValueInDateToPnlInEveryYear(accountValuesInDates);
+    if (monthOrYearOrDay === "month") {
+      return mapAccountValueInDateToPnlInEveryMonth(accountValuesInDates);
+    } else if (monthOrYearOrDay === "year") {
+      return mapAccountValueInDateToPnlInEveryYear(accountValuesInDates);
+    } else if (monthOrYearOrDay === "day") {
+      return mapAccountValueInDateToPnlInEveryDay(accountValuesInDates).reverse();
+    }
   }
 
   public static async getClosedTrades() {

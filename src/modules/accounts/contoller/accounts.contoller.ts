@@ -62,14 +62,14 @@ class AccountsController {
     }
   };
 
-  getAccountPnlInEveryMonthOrYear = async (req: Request, res: Response) => {
+  getAccountPnlInEveryMonthOrYearOrDay = async (req: Request, res: Response) => {
     try {
       res
         .status(200)
         .send(
-          await Accounts.getAccountPnlInEveryMonthOrYear(
+          await Accounts.getAccountPnlInEveryMonthOrYearOrDay(
             req.params.accountName,
-            req.params.monthOrYear
+            req.params.monthOrYearOrDay
           )
         );
     } catch {

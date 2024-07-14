@@ -273,6 +273,24 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return parseInt((await this.alpaca.getAccount()).portfolio_value);
   }
 
+  async getLastOrder(symbol: string) {
+    const twoMonthsInMilliseconds: number = 5259600000;
+
+    return (
+      await this.alpaca.getOrders({
+        status: "closed",
+        limit: 5, //the limit of the api,
+        after: new Date(
+          new Date().getTime() - twoMonthsInMilliseconds
+        ).toISOString(),
+        until: new Date(new Date().getTime()).toISOString(),
+        direction: "desc",
+        nested: "true",
+        symbols: symbol !== undefined ? symbol : "",
+      })
+    ).find((order: { status: string }) => order.status === "filled");
+  }
+
   async fetchAllOrders(symbol?: string) {
     const thirtyDaysInMilliseconds: number = 2592000000;
     let allOrders: any[] = [];
@@ -320,14 +338,16 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     const positions = await this.alpaca.getPositions();
 
     return positions.length !== 0
-      ? positions
-          .map((position: any) => {
-            return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
-              this.convertAlpacaPositionToPosition(position),
-              stopLossPercent
-            );
-          })
-          .sort((a: { pNl: number }, b: { pNl: number }) => b.pNl - a.pNl)
+      ? (
+          await Promise.all(
+            positions.map(async (position: any) => {
+              return await this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
+                this.convertAlpacaPositionToPosition(position),
+                stopLossPercent
+              );
+            })
+          )
+        ).sort((a: { pNl: number }, b: { pNl: number }) => b.pNl - a.pNl)
       : [];
   }
 
@@ -382,7 +402,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     stopLossPercent: number
   ) {
     try {
-      return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
+      return await this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
         this.convertAlpacaPositionToPosition(
           await this.alpaca.getPosition(symbol)
         ),
@@ -425,13 +445,15 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       );
       position.stopLossesHistory = [originalStopLoss];
 
+      const positionEntryTime = new Date(
+        lastTwoOrdersWithLegs[lastTwoOrdersWithLegs.length - 1].filled_at
+      );
+      position.entryTime = positionEntryTime;
       position.entries = [
         {
           price: parseFloat(brokerPosition.avg_entry_price),
           qty: originalStopLoss.qty,
-          date: new Date(
-            lastTwoOrdersWithLegs[lastTwoOrdersWithLegs.length - 1].filled_at
-          ),
+          date: position,
         },
       ];
 
@@ -713,10 +735,12 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     startDateInMilliseconds?: number
   ) {
     const twoYearsInMilliseconds = 63113904000;
-    startDateInMilliseconds = startDateInMilliseconds ? Math.max(
-      startDateInMilliseconds,
-      new Date(new Date().getTime() - twoYearsInMilliseconds).getTime()
-    ) : null;
+    startDateInMilliseconds = startDateInMilliseconds
+      ? Math.max(
+          startDateInMilliseconds,
+          new Date(new Date().getTime() - twoYearsInMilliseconds).getTime()
+        )
+      : null;
     const thirtyDaysInMilliseconds: number = 2592000000;
     let allOrders: any[] = [];
 
@@ -892,7 +916,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     );
   }
 
-  async getOrdersBySymbol(symbol: string, startDateInMilliseconds?: number): Promise<
+  async getOrdersBySymbol(
+    symbol: string,
+    startDateInMilliseconds?: number
+  ): Promise<
     {
       price: number;
       qty: number;
@@ -905,7 +932,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
           { price: number; qty: number; date: Date; type: "buy" | "sell" }[]
         >
       | { price: number; qty: number; date: Date; type: any }[] = [];
-    const brokerOrders = await this.fetchAllClosedOrders(symbol, startDateInMilliseconds);
+    const brokerOrders = await this.fetchAllClosedOrders(
+      symbol,
+      startDateInMilliseconds
+    );
 
     brokerOrders.forEach((order) => {
       orders.push({
@@ -1033,27 +1063,27 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       id: undefined,
       symbol: alpacaPosition.symbol,
       type: tradeType,
-      qty: alpacaPosition.qty,
-      entryPrice: alpacaPosition.avg_entry_price,
+      qty: parseInt(alpacaPosition.qty),
+      entryPrice: parseFloat(alpacaPosition.avg_entry_price),
       entryTime: undefined,
-      pNl: alpacaPosition.unrealized_pl,
+      pNl: parseFloat(alpacaPosition.unrealized_pl),
       percentPnL: calclautePercentagePnL(
         alpacaPosition.avg_entry_price,
         alpacaPosition.current_price,
         tradeType
       ),
-      dailyPnl: alpacaPosition.unrealized_intraday_pl,
-      currentStockPrice: alpacaPosition.current_price,
+      dailyPnl: parseFloat(alpacaPosition.unrealized_intraday_pl),
+      currentStockPrice: parseFloat(alpacaPosition.current_price),
       netLiquidation: Math.abs(
         alpacaPosition.current_price * alpacaPosition.qty
       ),
     };
   }
 
-  addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
+  async addDataToFifteenMinTSLAFromGuetaStratgeyPosition(
     position: Position,
     stopLossPercent: number
-  ): Position {
+  ): Promise<Position> {
     const stopLossPrice =
       position.entryPrice - (stopLossPercent / 100) * position.entryPrice;
     position.stopLosses = [
@@ -1066,6 +1096,10 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
     position.ratio =
       position.pNl / ((position.entryPrice - stopLossPrice) * position.qty);
+
+    position.entryTime = new Date(
+      (await this.getLastOrder(position.symbol)).filled_at
+    );
 
     return position;
   }

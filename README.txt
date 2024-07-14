@@ -34,9 +34,9 @@ return {
   date: Date
 }[]
 
-get AccountPnl In Every Month Or Year:
-route: /pNl/:accountName/:monthOrYear
-in monthOrYear you need to write month or year
+get AccountPnl In Every Month Or Year Or Day:
+route: /pNl/:accountName/:monthOrYearOrDay
+in monthOrYearOrDay you need to write month or year or day
 return {
   date: Date,
   pNl: number

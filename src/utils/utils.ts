@@ -126,9 +126,29 @@ export const getTradeRatio = (
   return null;
 };
 
+export const mapAccountValueInDateToPnlInEveryDay = (
+  accountValuesInDates: { value: number; date: Date }[]
+): { date: Date; pNl: number }[] => {
+  let index = 0;
+  return accountValuesInDates.map((accountValuesInDate) => {
+    const pNlFromLastDay =
+      accountValuesInDate.value -
+      (accountValuesInDates[index - 1]
+        ? accountValuesInDates[index - 1].value
+        : 0);
+
+    index++;
+
+    return {
+      date: accountValuesInDate.date,
+      pNl: pNlFromLastDay,
+    };
+  });
+};
+
 export const mapAccountValueInDateToPnlInEveryMonth = (
   accountValuesInDates: { value: number; date: Date }[]
-) => {
+): { date: Date; pNl: number }[] => {
   return Object.values(
     accountValuesInDates.reduce((acc: any, obj: any) => {
       // Extract the month and year from the date
@@ -160,7 +180,7 @@ export const mapAccountValueInDateToPnlInEveryMonth = (
 
 export const mapAccountValueInDateToPnlInEveryYear = (
   accountValuesInDates: { value: number; date: Date }[]
-) => {
+): { date: Date; pNl: number }[] => {
   return Object.values(
     accountValuesInDates.reduce((acc: any, obj: any) => {
       // Extract the year from the date
