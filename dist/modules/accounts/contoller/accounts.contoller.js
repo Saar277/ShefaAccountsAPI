@@ -30,7 +30,9 @@ class AccountsController {
         });
         this.getAccountPositions = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                res.status(200).send(yield Accounts_1.Accounts.getAccountPositions(req.params.accountName));
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountPositions(req.params.accountName));
             }
             catch (_b) {
                 res.status(500).send();
@@ -92,13 +94,41 @@ class AccountsController {
                 res.status(500).send();
             }
         });
+        this.getAccountsStatistics = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res.status(200).send(yield Accounts_1.Accounts.getAccountsTradesStatistics());
+            }
+            catch (_j) {
+                res.status(500).send();
+            }
+        });
         this.getAccountStatistics = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountTradesStatistics(req.params.accountName));
             }
-            catch (_j) {
+            catch (_k) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountStatisticsForSymbol = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountTradesStatisticsForSymbol(req.params.accountName, req.params.symbol));
+            }
+            catch (_l) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountStatisticsPerSymbol = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountTradesStatisticsPerSymbol(req.params.accountName));
+            }
+            catch (_m) {
                 res.status(500).send();
             }
         });
@@ -108,7 +138,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getAccountTradesStatisticsInTimeRange(req.params.accountName, parseInt(req.params.startDate), parseInt(req.params.endDate)));
             }
-            catch (_k) {
+            catch (_o) {
                 res.status(500).send();
             }
         });
@@ -116,15 +146,17 @@ class AccountsController {
             try {
                 res.status(200).send(yield Accounts_1.Accounts.getAccountsOrdersSymbols());
             }
-            catch (_l) {
+            catch (_p) {
                 res.status(500).send();
             }
         });
         this.getAccountOrdersSymbols = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                res.status(200).send(yield Accounts_1.Accounts.getAccountOrdersSymbols(req.params.accountName));
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountOrdersSymbols(req.params.accountName));
             }
-            catch (_m) {
+            catch (_q) {
                 res.status(500).send();
             }
         });
@@ -142,7 +174,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit));
             }
-            catch (_o) {
+            catch (_r) {
                 res.status(500).send();
             }
         });
@@ -152,7 +184,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength), parseFloat(req.params.startMilliseconds)));
             }
-            catch (_p) {
+            catch (_s) {
                 res.status(500).send();
             }
         });
@@ -162,7 +194,7 @@ class AccountsController {
                     .status(200)
                     .send(yield Accounts_1.Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.rollingWindow), parseFloat(req.params.startMilliseconds)));
             }
-            catch (_q) {
+            catch (_t) {
                 res.status(500).send();
             }
         });

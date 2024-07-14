@@ -578,6 +578,19 @@ class AlpacaBrokerAPI {
         });
         return exits;
     }
+    getPositionPnL(symbol) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                return parseFloat((yield this.alpaca.getPosition(symbol)).unrealized_pl);
+            }
+            catch (error) {
+                if (error === 404) {
+                    // Position not found
+                    return null;
+                }
+            }
+        });
+    }
     isInPosition(symbol) {
         return __awaiter(this, void 0, void 0, function* () {
             const positions = yield this.alpaca.getPositions();
@@ -859,6 +872,7 @@ class AlpacaBrokerAPI {
             dailyPnl: parseFloat(alpacaPosition.unrealized_intraday_pl),
             currentStockPrice: parseFloat(alpacaPosition.current_price),
             netLiquidation: Math.abs(alpacaPosition.current_price * alpacaPosition.qty),
+            overAllPnL: parseFloat(alpacaPosition.unrealized_pl),
         };
     }
     addDataToFifteenMinTSLAFromGuetaStratgeyPosition(position, stopLossPercent) {

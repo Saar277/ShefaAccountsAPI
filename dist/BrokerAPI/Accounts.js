@@ -122,6 +122,16 @@ class Accounts {
                 .iBrokerAPI.getMoneyAmount();
         });
     }
+    static getAccountsTradesStatistics() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return Promise.all(this.accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
+                return {
+                    accountName: account.name,
+                    statistics: yield this.getAccountTradesStatistics(account.name),
+                };
+            })));
+        });
+    }
     static getAccountTradesStatistics(accountName) {
         var _b;
         return __awaiter(this, void 0, void 0, function* () {
@@ -140,6 +150,7 @@ class Accounts {
                 moneyAmount: moneyAmount,
                 pNl: pNl,
                 percentPNl: (pNl / startMoneyAmount) * 100,
+                realizedPnL: trades.reduce((sum, trade) => sum + trade.pNl, 0),
                 winningTradesCount: winningTrades.length,
                 losingTradesCount: trades.length - winningTrades.length,
                 successRate: (winningTrades.length / trades.length) * 100,
@@ -152,6 +163,56 @@ class Accounts {
                 shortPrecentage: 100 - longTradesPrecentage,
                 startDate: (_b = trades[trades.length - 1]) === null || _b === void 0 ? void 0 : _b.entryTime,
             };
+        });
+    }
+    static getAccountTradesStatisticsForSymbol(accountName, symbol) {
+        var _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const trades = (yield this.getClosedTradesForAccount(accountName)).filter((trade) => trade.symbol === symbol);
+            const startMoneyAmount = yield this.getStartMoneyAmount(accountName);
+            const realizedPnL = trades.reduce((sum, trade) => sum + trade.pNl, 0);
+            const account = this.accounts.find((account) => account.name === accountName);
+            const position = yield account.iBrokerAPI.getPositionForStrategy(symbol, account);
+            const pNl = position
+                ? position.overAllPnL
+                    ? realizedPnL + position.overAllPnL
+                    : realizedPnL + position.pNl
+                : realizedPnL;
+            const winningTrades = trades.filter((trade) => trade.pNl > 0);
+            const avgWinningTrade = this.getAvgWinningTrade(winningTrades);
+            const avgLosingTrade = this.getAvgLosingTrade(trades);
+            const longTradesPrecentage = (trades.filter((trade) => trade.type === TradeType_1.TradeType.LONG).length /
+                trades.length) *
+                100;
+            return {
+                pNl: pNl,
+                percentPNl: (pNl / startMoneyAmount) * 100,
+                realizedPnL: realizedPnL,
+                winningTradesCount: winningTrades.length,
+                losingTradesCount: trades.length - winningTrades.length,
+                successRate: (winningTrades.length / trades.length) * 100,
+                avgWinningTrade: avgWinningTrade,
+                avgLosingTrade: avgLosingTrade,
+                ratio: avgWinningTrade / avgLosingTrade,
+                largestWinningTrade: Math.max(...trades.map((trade) => trade.pNl)),
+                largestLosingTrade: Math.min(...trades.map((trade) => trade.pNl)),
+                longPrecentage: longTradesPrecentage,
+                shortPrecentage: 100 - longTradesPrecentage,
+                startDate: (_b = trades[trades.length - 1]) === null || _b === void 0 ? void 0 : _b.entryTime,
+                startMoneyAmount: undefined,
+                moneyAmount: undefined,
+            };
+        });
+    }
+    static getAccountTradesStatisticsPerSymbol(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield Promise.all((yield this.getAccountOrdersSymbols(accountName)).map((symbol) => __awaiter(this, void 0, void 0, function* () {
+                return {
+                    symbol: symbol,
+                    statistics: yield this.getAccountTradesStatisticsForSymbol(accountName, symbol),
+                };
+            })))).filter((statisticsPerSymbol) => statisticsPerSymbol.statistics.winningTradesCount !== 0 ||
+                statisticsPerSymbol.statistics.losingTradesCount !== 0);
         });
     }
     static getAccountTradesStatisticsInTimeRange(accountName, startDateInMilliseconds, endDateInMilliseconds) {
@@ -173,6 +234,7 @@ class Accounts {
                 moneyAmount: moneyAmount,
                 pNl: pNl,
                 percentPNl: (pNl / startMoneyAmount) * 100,
+                realizedPnL: trades.reduce((sum, trade) => sum + trade.pNl, 0),
                 winningTradesCount: winningTrades.length,
                 losingTradesCount: trades.length - winningTrades.length,
                 successRate: (winningTrades.length / trades.length) * 100,

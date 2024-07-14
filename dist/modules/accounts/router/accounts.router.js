@@ -10,7 +10,9 @@ const router = express.Router();
  * get all the examples
  */
 router.route("/positions").get(accounts_contoller_1.default.getAccountsPositions);
-router.route("/positions/:accountName").get(accounts_contoller_1.default.getAccountPositions);
+router
+    .route("/positions/:accountName")
+    .get(accounts_contoller_1.default.getAccountPositions);
 router.route("/values").get(accounts_contoller_1.default.getAccountsValuesHistory);
 router
     .route("/values/:accountName")
@@ -23,9 +25,16 @@ router
     .get(accounts_contoller_1.default.getAccountPnlInEveryMonthOrYearOrDay);
 router.route("/trades").get(accounts_contoller_1.default.getAccountsTrades);
 router.route("/trades/:accountName").get(accounts_contoller_1.default.getAccountTrades);
+router.route("/statistics").get(accounts_contoller_1.default.getAccountsStatistics);
 router
     .route("/statistics/:accountName")
     .get(accounts_contoller_1.default.getAccountStatistics);
+router
+    .route("/statistics/:accountName/:symbol")
+    .get(accounts_contoller_1.default.getAccountStatisticsForSymbol);
+router
+    .route("/statisticsPerSymbol/:accountName")
+    .get(accounts_contoller_1.default.getAccountStatisticsPerSymbol);
 router
     .route("/statistics/:accountName/:startDate/:endDate")
     .get(accounts_contoller_1.default.getAccountStatisticsInTimeRange);
