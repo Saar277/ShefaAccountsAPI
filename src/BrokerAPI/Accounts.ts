@@ -119,7 +119,9 @@ export class Accounts {
     } else if (monthOrYearOrDay === "year") {
       return mapAccountValueInDateToPnlInEveryYear(accountValuesInDates);
     } else if (monthOrYearOrDay === "day") {
-      return mapAccountValueInDateToPnlInEveryDay(accountValuesInDates).reverse();
+      return mapAccountValueInDateToPnlInEveryDay(
+        accountValuesInDates
+      ).reverse();
     }
   }
 
@@ -156,6 +158,17 @@ export class Accounts {
     return await this.accounts
       .find((account) => account.name === accountName)
       .iBrokerAPI.getMoneyAmount();
+  }
+
+  public static async getAccountsTradesStatistics() {
+    return Promise.all(
+      this.accounts.map(async (account) => {
+        return {
+          accountName: account.name,
+          statistics: await this.getAccountTradesStatistics(account.name),
+        };
+      })
+    );
   }
 
   public static async getAccountTradesStatistics(

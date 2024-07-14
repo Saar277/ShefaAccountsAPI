@@ -11,7 +11,6 @@ class AccountsController {
    * @param res - the response we return
    */
 
-
   getAccountsPositions = async (req: Request, res: Response) => {
     try {
       res.status(200).send(await Accounts.getAccountsPositions());
@@ -22,7 +21,9 @@ class AccountsController {
 
   getAccountPositions = async (req: Request, res: Response) => {
     try {
-      res.status(200).send(await Accounts.getAccountPositions(req.params.accountName));
+      res
+        .status(200)
+        .send(await Accounts.getAccountPositions(req.params.accountName));
     } catch {
       res.status(500).send();
     }
@@ -62,7 +63,10 @@ class AccountsController {
     }
   };
 
-  getAccountPnlInEveryMonthOrYearOrDay = async (req: Request, res: Response) => {
+  getAccountPnlInEveryMonthOrYearOrDay = async (
+    req: Request,
+    res: Response
+  ) => {
     try {
       res
         .status(200)
@@ -90,6 +94,14 @@ class AccountsController {
       res
         .status(200)
         .send(await Accounts.getClosedTradesForAccount(req.params.accountName));
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountsStatistics = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAccountsTradesStatistics());
     } catch {
       res.status(500).send();
     }
@@ -133,7 +145,9 @@ class AccountsController {
 
   getAccountOrdersSymbols = async (req: Request, res: Response) => {
     try {
-      res.status(200).send(await Accounts.getAccountOrdersSymbols(req.params.accountName));
+      res
+        .status(200)
+        .send(await Accounts.getAccountOrdersSymbols(req.params.accountName));
     } catch {
       res.status(500).send();
     }
@@ -147,7 +161,10 @@ class AccountsController {
     }
   };
 
-  getBarsWithOrdersAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
+  getBarsWithOrdersAndStopLossesAndTakeProfits = async (
+    req: Request,
+    res: Response
+  ) => {
     try {
       res
         .status(200)
@@ -164,7 +181,10 @@ class AccountsController {
     }
   };
 
-  getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
+  getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits = async (
+    req: Request,
+    res: Response
+  ) => {
     try {
       res
         .status(200)
@@ -183,7 +203,10 @@ class AccountsController {
     }
   };
 
-  getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits = async (req: Request, res: Response) => {
+  getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits = async (
+    req: Request,
+    res: Response
+  ) => {
     try {
       res
         .status(200)

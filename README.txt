@@ -79,6 +79,14 @@ trades: {
     exits: {price: number; qty: number; date: string (repesents Date)}[]
   }[]
 
+get all accounts statistics:
+route: /accounts/statistics
+return:
+{
+  accountName: string,
+  statistics: statistics
+}  
+
 get account statistics:
 route: /accounts/statistics/:accountName #(in accountName write the name of the account you want)
 return: Statistics
@@ -229,4 +237,5 @@ Statistics {
   largestLosingTrade: number;
   longPrecentage: number;
   shortPrecentage: number;
+  startDate: Date;
 }

@@ -8,7 +8,9 @@ const router = express.Router();
  */
 router.route("/positions").get(accountsContoller.getAccountsPositions);
 
-router.route("/positions/:accountName").get(accountsContoller.getAccountPositions);
+router
+  .route("/positions/:accountName")
+  .get(accountsContoller.getAccountPositions);
 
 router.route("/values").get(accountsContoller.getAccountsValuesHistory);
 
@@ -27,6 +29,8 @@ router
 router.route("/trades").get(accountsContoller.getAccountsTrades);
 
 router.route("/trades/:accountName").get(accountsContoller.getAccountTrades);
+
+router.route("/statistics").get(accountsContoller.getAccountsStatistics);
 
 router
   .route("/statistics/:accountName")
@@ -48,16 +52,22 @@ router
   .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit")
   .get(accountsContoller.getBarsWithOrdersAndStopLossesAndTakeProfits);
 
-  router
+router
   .route("/bars/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:smaLength")
   .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits); //TODO: delete it after the front use the route below
 
-  router
-  .route("/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:smaLength")
+router
+  .route(
+    "/bars/withSma/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:smaLength"
+  )
   .get(accountsContoller.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits);
 
-  router
-  .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:rollingWindow")
-  .get(accountsContoller.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits);
+router
+  .route(
+    "/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:rollingWindow"
+  )
+  .get(
+    accountsContoller.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits
+  );
 
 module.exports = router;
