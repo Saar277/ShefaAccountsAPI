@@ -212,13 +212,15 @@ class Accounts {
     static getAccountsNames() {
         return this.accounts.map((account) => account.name);
     }
-    static getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit) {
+    static getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const account = this.accounts.find((account) => account.name === accountName);
-                const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol);
+                const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol, startDateInMilliseconds);
                 const fiveDaysInMilliseconds = 432000000;
-                const startDate = new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
+                const startDate = startDateInMilliseconds
+                    ? new Date(startDateInMilliseconds).toISOString()
+                    : new Date(orders[0].date.getTime() - fiveDaysInMilliseconds).toISOString();
                 const bars = yield account.iBrokerAPI.getBars(symbol, timeFrame, timeFrameUnit, true, startDate);
                 const position = yield account.iBrokerAPI.getPositionForStrategy(symbol, account);
                 return {
@@ -233,10 +235,10 @@ class Accounts {
             }
         });
     }
-    static getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, smaLength) {
+    static getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, smaLength, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit);
+                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, startDateInMilliseconds);
                 return {
                     orders: orders,
                     bars: bars,
@@ -250,10 +252,10 @@ class Accounts {
             }
         });
     }
-    static getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, rollingWindow) {
+    static getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, rollingWindow, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit);
+                const { orders, bars, stopLosses, takeProfits } = yield this.getBarsWithOrdersAndStopLossesAndTakeProfits(accountName, symbol, timeFrame, timeFrameUnit, startDateInMilliseconds);
                 const { minima, maxima } = (0, utils_1.findLocalMinimaMaximaIndices)(bars, rollingWindow);
                 return {
                     orders: orders,

@@ -150,7 +150,7 @@ class AccountsController {
             try {
                 res
                     .status(200)
-                    .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength)));
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersWithSmaAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.smaLength), parseFloat(req.params.startMilliseconds)));
             }
             catch (_p) {
                 res.status(500).send();
@@ -160,7 +160,7 @@ class AccountsController {
             try {
                 res
                     .status(200)
-                    .send(yield Accounts_1.Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.rollingWindow)));
+                    .send(yield Accounts_1.Accounts.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits(req.params.accountName, req.params.symbol, parseInt(req.params.timeFrame), req.params.TimeFrameUnit, parseInt(req.params.rollingWindow), parseFloat(req.params.startMilliseconds)));
             }
             catch (_q) {
                 res.status(500).send();

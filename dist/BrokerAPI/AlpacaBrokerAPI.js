@@ -336,7 +336,12 @@ class AlpacaBrokerAPI {
     }
     getFifteenMinTSLAFromGuetaStratgeyPosition(symbol, stopLossPercent) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(this.convertAlpacaPositionToPosition(yield this.alpaca.getPosition(symbol)), stopLossPercent);
+            try {
+                return this.addDataToFifteenMinTSLAFromGuetaStratgeyPosition(this.convertAlpacaPositionToPosition(yield this.alpaca.getPosition(symbol)), stopLossPercent);
+            }
+            catch (error) {
+                return null;
+            }
         });
     }
     getShefaStratgeyPosition(symbol) {
@@ -597,24 +602,33 @@ class AlpacaBrokerAPI {
             }
         });
     }
-    fetchAllClosedOrders(symbol) {
+    fetchAllClosedOrders(symbol, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
+            const twoYearsInMilliseconds = 63113904000;
+            startDateInMilliseconds = startDateInMilliseconds ? Math.max(startDateInMilliseconds, new Date(new Date().getTime() - twoYearsInMilliseconds).getTime()) : null;
             const thirtyDaysInMilliseconds = 2592000000;
             let allOrders = [];
             let orders = [];
             let index = 1;
-            while (orders.length !== 0 || index == 1) {
+            let after = new Date(new Date().getTime() - thirtyDaysInMilliseconds * index);
+            let until = new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1));
+            while ((orders.length !== 0 || index == 1) &&
+                (startDateInMilliseconds
+                    ? until.getTime() >= startDateInMilliseconds
+                    : true)) {
                 orders = yield this.alpaca.getOrders({
                     status: "closed",
                     limit: 500,
-                    after: new Date(new Date().getTime() - thirtyDaysInMilliseconds * index).toISOString(),
-                    until: new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1)).toISOString(),
+                    after: after.toISOString(),
+                    until: until.toISOString(),
                     direction: "desc",
                     nested: "true",
                     symbols: symbol !== undefined ? symbol : "",
                 });
                 allOrders = allOrders.concat(orders);
                 index++;
+                after = new Date(new Date().getTime() - thirtyDaysInMilliseconds * index);
+                until = new Date(new Date().getTime() - thirtyDaysInMilliseconds * (index - 1));
             }
             return allOrders
                 .filter((order) => parseInt(order.filled_qty) > 0 || order.status !== "canceled")
@@ -720,10 +734,10 @@ class AlpacaBrokerAPI {
             return (0, lodash_1.uniq)((yield this.fetchAllClosedOrders()).map((order) => order.symbol));
         });
     }
-    getOrdersBySymbol(symbol) {
+    getOrdersBySymbol(symbol, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
             const orders = [];
-            const brokerOrders = yield this.fetchAllClosedOrders(symbol);
+            const brokerOrders = yield this.fetchAllClosedOrders(symbol, startDateInMilliseconds);
             brokerOrders.forEach((order) => {
                 orders.push({
                     price: parseFloat(order.filled_avg_price),
