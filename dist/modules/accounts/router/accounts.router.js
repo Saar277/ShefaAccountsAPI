@@ -19,8 +19,8 @@ router
     .route("/values/:accountName/:startDate/:endDate")
     .get(accounts_contoller_1.default.getAccountValuesHistoryInDates);
 router
-    .route("/pNl/:accountName/:monthOrYear")
-    .get(accounts_contoller_1.default.getAccountPnlInEveryMonthOrYear);
+    .route("/pNl/:accountName/:monthOrYearOrDay")
+    .get(accounts_contoller_1.default.getAccountPnlInEveryMonthOrYearOrDay);
 router.route("/trades").get(accounts_contoller_1.default.getAccountsTrades);
 router.route("/trades/:accountName").get(accounts_contoller_1.default.getAccountTrades);
 router

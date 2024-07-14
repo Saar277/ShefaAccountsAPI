@@ -64,11 +64,11 @@ class AccountsController {
                 res.status(500).send();
             }
         });
-        this.getAccountPnlInEveryMonthOrYear = (req, res) => __awaiter(this, void 0, void 0, function* () {
+        this.getAccountPnlInEveryMonthOrYearOrDay = (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
                 res
                     .status(200)
-                    .send(yield Accounts_1.Accounts.getAccountPnlInEveryMonthOrYear(req.params.accountName, req.params.monthOrYear));
+                    .send(yield Accounts_1.Accounts.getAccountPnlInEveryMonthOrYearOrDay(req.params.accountName, req.params.monthOrYearOrDay));
             }
             catch (_f) {
                 res.status(500).send();

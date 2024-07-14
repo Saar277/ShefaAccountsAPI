@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findLocalMinimaMaximaIndices = exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.getTradeRatio = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
+exports.findLocalMinimaMaximaIndices = exports.getSmaValuesFromBars = exports.filterTradesByTimeRange = exports.mapAccountValueInDateToPnlInEveryYear = exports.mapAccountValueInDateToPnlInEveryMonth = exports.mapAccountValueInDateToPnlInEveryDay = exports.getTradeRatio = exports.createTradeFromOrdersData = exports.calclautePercentagePnL = void 0;
 const TradeType_1 = require("../models/TradeType");
 const MinMaxBar_1 = require("../models/Bar/MinMaxBar");
 const strategiesTypes_1 = require("../models/strategiesTypes");
@@ -74,6 +74,21 @@ const getTradeRatio = (pNl, originalStopLossPrice, tradeType, entryPrice, qty, a
     return null;
 };
 exports.getTradeRatio = getTradeRatio;
+const mapAccountValueInDateToPnlInEveryDay = (accountValuesInDates) => {
+    let index = 0;
+    return accountValuesInDates.map((accountValuesInDate) => {
+        const pNlFromLastDay = accountValuesInDate.value -
+            (accountValuesInDates[index - 1]
+                ? accountValuesInDates[index - 1].value
+                : 0);
+        index++;
+        return {
+            date: accountValuesInDate.date,
+            pNl: pNlFromLastDay,
+        };
+    });
+};
+exports.mapAccountValueInDateToPnlInEveryDay = mapAccountValueInDateToPnlInEveryDay;
 const mapAccountValueInDateToPnlInEveryMonth = (accountValuesInDates) => {
     return Object.values(accountValuesInDates.reduce((acc, obj) => {
         // Extract the month and year from the date

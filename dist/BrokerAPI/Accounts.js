@@ -76,14 +76,20 @@ class Accounts {
             });
         });
     }
-    static getAccountPnlInEveryMonthOrYear(accountName, monthOrYear) {
+    static getAccountPnlInEveryMonthOrYearOrDay(accountName, monthOrYearOrDay) {
         return __awaiter(this, void 0, void 0, function* () {
             const accountValuesInDates = yield this.accounts
                 .find((account) => account.name === accountName)
                 .iBrokerAPI.getAccountValuesHistory();
-            return monthOrYear === "month"
-                ? (0, utils_1.mapAccountValueInDateToPnlInEveryMonth)(accountValuesInDates)
-                : (0, utils_1.mapAccountValueInDateToPnlInEveryYear)(accountValuesInDates);
+            if (monthOrYearOrDay === "month") {
+                return (0, utils_1.mapAccountValueInDateToPnlInEveryMonth)(accountValuesInDates);
+            }
+            else if (monthOrYearOrDay === "year") {
+                return (0, utils_1.mapAccountValueInDateToPnlInEveryYear)(accountValuesInDates);
+            }
+            else if (monthOrYearOrDay === "day") {
+                return (0, utils_1.mapAccountValueInDateToPnlInEveryDay)(accountValuesInDates).reverse();
+            }
         });
     }
     static getClosedTrades() {
