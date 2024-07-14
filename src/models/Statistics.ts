@@ -3,6 +3,7 @@ export default interface Statistics {
   moneyAmount: number;
   pNl: number;
   percentPNl: number;
+  realizedPnL?: number;
   winningTradesCount: number;
   losingTradesCount: number;
   successRate: number;

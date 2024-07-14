@@ -119,6 +119,35 @@ class AccountsController {
     }
   };
 
+  getAccountStatisticsForSymbol = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountTradesStatisticsForSymbol(
+            req.params.accountName,
+            req.params.symbol
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountStatisticsPerSymbol = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(
+          await Accounts.getAccountTradesStatisticsPerSymbol(
+            req.params.accountName
+          )
+        );
+    } catch {
+      res.status(500).send();
+    }
+  };
+
   getAccountStatisticsInTimeRange = async (req: Request, res: Response) => {
     try {
       res

@@ -62,6 +62,7 @@ interface IBrokerAPI {
     symbol: string,
     account: AccountInfo
   ): Promise<Position>;
+  getPositionPnL(symbol: string): Promise<number>;
   isInPosition(symbol: string): Promise<boolean>;
   getAccountValuesHistory(): Promise<{ value: number; date: Date }[]>;
   getClosedTrades(account: AccountInfo): any;

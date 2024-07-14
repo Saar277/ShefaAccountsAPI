@@ -91,6 +91,18 @@ get account statistics:
 route: /accounts/statistics/:accountName #(in accountName write the name of the account you want)
 return: Statistics
 
+get account statistics for specific symbol:
+route: /accounts/statistics/:accountName/:symbol #(in accountName write the name of the account you want) #(in symbol write the symbol you want)
+return: Statistics
+
+get account statistics per symbol:
+route: /accounts/statistics/:accountName/ #(in accountName write the name of the account you want)
+return: 
+{
+  symbol: string,
+  statistics: Statistics
+}[]
+
 get account statistics in time range:
 route: /accounts/statistics/:accountName/:startDate/:endDate
 # in accountName write the name of the account you want
@@ -227,6 +239,7 @@ Statistics {
   moneyAmount: number;
   pNl: number;
   percentPNl: number;
+  realizedPnL?: number;
   winningTradesCount: number;
   losingTradesCount: number;
   successRate: number;

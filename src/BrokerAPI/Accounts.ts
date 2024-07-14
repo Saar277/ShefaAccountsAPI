@@ -13,6 +13,7 @@ import {
   mapAccountValueInDateToPnlInEveryDay,
 } from "../utils/utils";
 import { AccountInfo } from "../models/AccountInfo";
+import { Trade } from "../models/Trade";
 
 export class Accounts {
   private static accounts: AccountInfo[] = this.intalizeAccounts();
@@ -200,6 +201,10 @@ export class Accounts {
       moneyAmount: moneyAmount,
       pNl: pNl,
       percentPNl: (pNl / startMoneyAmount) * 100,
+      realizedPnL: trades.reduce(
+        (sum: number, trade: Trade) => sum + trade.pNl,
+        0
+      ),
       winningTradesCount: winningTrades.length,
       losingTradesCount: trades.length - winningTrades.length,
       successRate: (winningTrades.length / trades.length) * 100,
@@ -216,6 +221,102 @@ export class Accounts {
       shortPrecentage: 100 - longTradesPrecentage,
       startDate: trades[trades.length - 1]?.entryTime,
     };
+  }
+
+  public static async getAccountTradesStatisticsForSymbol(
+    accountName: string,
+    symbol: string
+  ): Promise<Statistics> {
+    const trades = (await this.getClosedTradesForAccount(accountName)).filter(
+      (trade: Trade) => trade.symbol === symbol
+    );
+
+    const startMoneyAmount: number = await this.getStartMoneyAmount(
+      accountName
+    );
+
+    const realizedPnL: number = trades.reduce(
+      (sum: number, trade: Trade) => sum + trade.pNl,
+      0
+    );
+    const account = this.accounts.find(
+      (account) => account.name === accountName
+    );
+    const position = await account.iBrokerAPI.getPositionForStrategy(
+      symbol,
+      account
+    );
+
+    const pNl: number = position
+      ? position.overAllPnL
+        ? realizedPnL + position.overAllPnL
+        : realizedPnL + position.pNl
+      : realizedPnL;
+
+    const winningTrades = trades.filter(
+      (trade: { pNl: number }) => trade.pNl > 0
+    );
+    const avgWinningTrade: number = this.getAvgWinningTrade(winningTrades);
+    const avgLosingTrade: number = this.getAvgLosingTrade(trades);
+
+    const longTradesPrecentage: number =
+      (trades.filter(
+        (trade: { type: TradeType }) => trade.type === TradeType.LONG
+      ).length /
+        trades.length) *
+      100;
+
+    return {
+      pNl: pNl,
+      percentPNl: (pNl / startMoneyAmount) * 100,
+      realizedPnL: realizedPnL,
+      winningTradesCount: winningTrades.length,
+      losingTradesCount: trades.length - winningTrades.length,
+      successRate: (winningTrades.length / trades.length) * 100,
+      avgWinningTrade: avgWinningTrade,
+      avgLosingTrade: avgLosingTrade,
+      ratio: avgWinningTrade / avgLosingTrade,
+      largestWinningTrade: Math.max(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
+      largestLosingTrade: Math.min(
+        ...trades.map((trade: { pNl: any }) => trade.pNl)
+      ),
+      longPrecentage: longTradesPrecentage,
+      shortPrecentage: 100 - longTradesPrecentage,
+      startDate: trades[trades.length - 1]?.entryTime,
+      startMoneyAmount: undefined,
+      moneyAmount: undefined,
+    };
+  }
+
+  public static async getAccountTradesStatisticsPerSymbol(
+    accountName: string
+  ): Promise<
+    {
+      symbol: string;
+      statistics: Statistics;
+    }[]
+  > {
+    return (
+      await Promise.all(
+        (
+          await this.getAccountOrdersSymbols(accountName)
+        ).map(async (symbol) => {
+          return {
+            symbol: symbol,
+            statistics: await this.getAccountTradesStatisticsForSymbol(
+              accountName,
+              symbol
+            ),
+          };
+        })
+      )
+    ).filter(
+      (statisticsPerSymbol) =>
+        statisticsPerSymbol.statistics.winningTradesCount !== 0 ||
+        statisticsPerSymbol.statistics.losingTradesCount !== 0
+    );
   }
 
   public static async getAccountTradesStatisticsInTimeRange(
@@ -256,6 +357,10 @@ export class Accounts {
       moneyAmount: moneyAmount,
       pNl: pNl,
       percentPNl: (pNl / startMoneyAmount) * 100,
+      realizedPnL: trades.reduce(
+        (sum: number, trade: Trade) => sum + trade.pNl,
+        0
+      ),
       winningTradesCount: winningTrades.length,
       losingTradesCount: trades.length - winningTrades.length,
       successRate: (winningTrades.length / trades.length) * 100,

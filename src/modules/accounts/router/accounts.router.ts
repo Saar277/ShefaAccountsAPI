@@ -37,6 +37,14 @@ router
   .get(accountsContoller.getAccountStatistics);
 
 router
+  .route("/statistics/:accountName/:symbol")
+  .get(accountsContoller.getAccountStatisticsForSymbol);
+
+  router
+  .route("/statisticsPerSymbol/:accountName")
+  .get(accountsContoller.getAccountStatisticsPerSymbol);
+
+router
   .route("/statistics/:accountName/:startDate/:endDate")
   .get(accountsContoller.getAccountStatisticsInTimeRange);
 

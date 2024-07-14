@@ -690,6 +690,17 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return exits;
   }
 
+  async getPositionPnL(symbol: string): Promise<number> {
+    try {
+      return parseFloat((await this.alpaca.getPosition(symbol)).unrealized_pl);
+    } catch (error) {
+      if (error === 404) {
+        // Position not found
+        return null;
+      }
+    }
+  }
+
   async isInPosition(symbol: string): Promise<boolean> {
     const positions: any[] = await this.alpaca.getPositions();
     return positions.some((position) => position.symbol === symbol);
@@ -1077,6 +1088,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       netLiquidation: Math.abs(
         alpacaPosition.current_price * alpacaPosition.qty
       ),
+      overAllPnL: parseFloat(alpacaPosition.unrealized_pl),
     };
   }
 
