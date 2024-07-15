@@ -353,11 +353,13 @@ class AlpacaBrokerAPI implements IBrokerAPI {
 
   async getPositionsForStrategy(account: AccountInfo): Promise<Position[]> {
     if (account.strategy === StrategyType.SHEFA) {
-      return await (
-        await this.alpaca.getPositions()
-      ).map(async (position: any) => {
-        return await this.getShefaStratgeyPosition(position.symbol);
-      });
+      return await Promise.all(
+        await (
+          await this.alpaca.getPositions()
+        ).map(async (position: any) => {
+          return await this.getShefaStratgeyPosition(position.symbol);
+        })
+      );
     } else if (account.strategy === StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA) {
       return await this.getFifteenMinTSLAFromGuetaStratgeyPositions(
         account.defaultStopLossPercentInTrade
@@ -430,7 +432,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         entryPrice: parseFloat(brokerPosition.avg_entry_price),
       };
 
-      position.wantedEntryPrice = lastTwoOrdersWithLegs[0].stop_price;
+      position.wantedEntryPrice = parseFloat(lastTwoOrdersWithLegs[0].stop_price);
       position.pNl = parseFloat(brokerPosition.unrealized_pl);
 
       const takeProfit = this.getTakeProfitOrderForShefaStratgey(
@@ -453,7 +455,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         {
           price: parseFloat(brokerPosition.avg_entry_price),
           qty: originalStopLoss.qty,
-          date: position,
+          date: positionEntryTime,
         },
       ];
 

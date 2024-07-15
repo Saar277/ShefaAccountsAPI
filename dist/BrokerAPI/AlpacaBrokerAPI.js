@@ -306,9 +306,9 @@ class AlpacaBrokerAPI {
     getPositionsForStrategy(account) {
         return __awaiter(this, void 0, void 0, function* () {
             if (account.strategy === strategiesTypes_1.StrategyType.SHEFA) {
-                return yield (yield this.alpaca.getPositions()).map((position) => __awaiter(this, void 0, void 0, function* () {
+                return yield Promise.all(yield (yield this.alpaca.getPositions()).map((position) => __awaiter(this, void 0, void 0, function* () {
                     return yield this.getShefaStratgeyPosition(position.symbol);
-                }));
+                })));
             }
             else if (account.strategy === strategiesTypes_1.StrategyType.FIFTEEN_MIN_TSLA_FROM_GUETA) {
                 return yield this.getFifteenMinTSLAFromGuetaStratgeyPositions(account.defaultStopLossPercentInTrade);
@@ -369,7 +369,7 @@ class AlpacaBrokerAPI {
                     qty: Math.abs(brokerPosition.qty),
                     entryPrice: parseFloat(brokerPosition.avg_entry_price),
                 };
-                position.wantedEntryPrice = lastTwoOrdersWithLegs[0].stop_price;
+                position.wantedEntryPrice = parseFloat(lastTwoOrdersWithLegs[0].stop_price);
                 position.pNl = parseFloat(brokerPosition.unrealized_pl);
                 const takeProfit = this.getTakeProfitOrderForShefaStratgey(lastTwoOrdersWithLegs, tradeType);
                 position.takeProfits = [takeProfit];
@@ -382,7 +382,7 @@ class AlpacaBrokerAPI {
                     {
                         price: parseFloat(brokerPosition.avg_entry_price),
                         qty: originalStopLoss.qty,
-                        date: position,
+                        date: positionEntryTime,
                     },
                 ];
                 position.stopLosses = yield this.getStopLossesForShefaStratgey(symbol, position.type);
