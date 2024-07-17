@@ -660,7 +660,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   getPositionExitsForShefaStratgey(orders: any[]): OrderPoint[] {
     const exits: OrderPoint[] = [];
 
-    orders = [...orders].reverse();
+    // orders = [...orders].reverse();
     const lastLegIndex: number = orders.findIndex((order) => order.legs);
 
     orders.slice(lastLegIndex, lastLegIndex + 2).forEach((order) => {
