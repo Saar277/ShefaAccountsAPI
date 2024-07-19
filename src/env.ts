@@ -36,8 +36,8 @@ export const accountsInfo = [
   },
   {
     NAME: "test",
-    API_KEY: "PK2XUCJDV9O3TAQQ91LV",
-    API_SECRET: "eRI9aZdebeUIrV8KE0Ajsp97D1hAB9gBok0qAGGE",
+    API_KEY: "PKTQDYD6Z4DKI62QYBWM",
+    API_SECRET: "5QzrjtZsdcMB1IXpsAJVs5rhMlCdZMueQHshup36",
     STRATEGY: StrategyType.SHEFA,
   },
 ];
