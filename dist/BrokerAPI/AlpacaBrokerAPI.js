@@ -550,7 +550,7 @@ class AlpacaBrokerAPI {
     }
     getPositionExitsForShefaStratgey(orders) {
         const exits = [];
-        orders = [...orders].reverse();
+        // orders = [...orders].reverse();
         const lastLegIndex = orders.findIndex((order) => order.legs);
         orders.slice(lastLegIndex, lastLegIndex + 2).forEach((order) => {
             if (order.legs) {
