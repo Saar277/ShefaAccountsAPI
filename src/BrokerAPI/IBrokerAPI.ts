@@ -1,3 +1,4 @@
+import { Order } from "../models/Order";
 import { AccountInfo } from "../models/AccountInfo";
 import Bar from "../models/Bar/Bar";
 import { Position } from "../models/Position";
@@ -25,7 +26,11 @@ interface IBrokerAPI {
   getClosedTrades(account: AccountInfo): any;
   getDateInApiFormat(date: Date): string;
   getAllOrdersSymbols(): Promise<string[]>;
-  getClosedOrdersBySymbol(symbol: string, startDateInMilliseconds?: number): any;
+  getClosedOrdersBySymbol(
+    symbol: string,
+    startDateInMilliseconds?: number
+  ): any;
+  getAllOrders(symbol?: string): Promise<Order[]>;
 }
 
 export default IBrokerAPI;

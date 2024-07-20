@@ -253,6 +253,34 @@ class AccountsController {
       res.status(500).send();
     }
   };
+
+  getAllOrders = async (req: Request, res: Response) => {
+    try {
+      res.status(200).send(await Accounts.getAllOrders());
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountAllOrders = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(await Accounts.getAccountAllOrders(req.params.accountName));
+    } catch {
+      res.status(500).send();
+    }
+  };
+
+  getAccountAllOpenOrders = async (req: Request, res: Response) => {
+    try {
+      res
+        .status(200)
+        .send(await Accounts.getAccountAllOpenOrders(req.params.accountName));
+    } catch {
+      res.status(500).send();
+    }
+  };
 }
 
 export default new AccountsController();

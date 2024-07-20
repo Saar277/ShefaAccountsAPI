@@ -789,29 +789,60 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return orders;
   }
 
-  async getAllOrders(symbol?: string) {
+  async getAllOrders(symbol?: string): Promise<Order[]> {
     const brokerOrders = await this.fetchAllOrders(symbol);
-    const formatted_orders: Order[] = [];
+    const formattedOrders: Order[] = [];
 
     brokerOrders.forEach((order) => {
-      const formatted_order: Order = {
-        price: parseFloat(order.stop_price) || parseFloat(order.limit_price) || parseFloat(order.filled_avg_price),
-        qty: parseInt(order.qty),
-        side: order.side,
-        date: new Date(order.created_at),
-        status: order.status
-      };
-
-      if (order.filled_avg_price) {
-        formatted_order.filledPrice = parseFloat(order.filled_avg_price);
-        formatted_order.filledQty = parseInt(order.filled_qty);
-        formatted_order.filledDate = new Date(order.filled_at); 
-      }
+      const formattedOrder: Order = this.convertAlpacaOrderToOrder(order);
 
       if (order.legs) {
-        //TODO: continue from here
+        order.legs.forEach((leg: any) => {
+          const formattedLeg = this.convertAlpacaOrderToOrder(leg);
+
+          if (leg.stop_price) {
+            formattedOrder.stopLosses = [formattedLeg];
+          } else if (leg.limit_price) {
+            formattedOrder.takeProfits = [formattedLeg];
+          }
+        });
       }
-    })
+
+      formattedOrders.push(formattedOrder);
+    });
+
+    return formattedOrders;
+  }
+
+  convertAlpacaOrderToOrder(alpacaOrder: any): Order {
+    const formattedOrder: Order = {
+      price:
+        parseFloat(alpacaOrder.stop_price) ||
+        parseFloat(alpacaOrder.limit_price) ||
+        parseFloat(alpacaOrder.filled_avg_price),
+      qty: parseInt(alpacaOrder.qty),
+      side: alpacaOrder.side,
+      date: new Date(alpacaOrder.created_at),
+      status: this.convertAlpacaOrderSideToSide(alpacaOrder.status),
+    };
+
+    if (alpacaOrder.filled_avg_price) {
+      formattedOrder.filledPrice = parseFloat(alpacaOrder.filled_avg_price);
+      formattedOrder.filledQty = parseInt(alpacaOrder.filled_qty);
+      formattedOrder.filledDate = new Date(alpacaOrder.filled_at);
+    }
+
+    return formattedOrder;
+  }
+
+  convertAlpacaOrderSideToSide(alpacaOrderSide: string) {
+    if (alpacaOrderSide === "new" || alpacaOrderSide === "accepted") {
+      return "open";
+    } else if (alpacaOrderSide === "filled" || alpacaOrderSide === "closed") {
+      return "filled";
+    } else if (alpacaOrderSide === "canceled") {
+      return alpacaOrderSide;
+    }
   }
 
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {

@@ -6,7 +6,7 @@ export interface Order {
   side: "buy" | "sell";
   date: Date;
   filledDate?: Date;
-  status: "open" | "closed" | "canceled" | "filled";
+  status: "open" | "filled" | "canceled";
   takeProfits?: Order[];
   stopLosses?: Order[];
 }

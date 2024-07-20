@@ -198,6 +198,22 @@ return:
   takeProfits: OrderPoint[];
 }
 
+get all accounts orders
+route: /accounts/orders
+return:
+{
+  accountName: string,
+  orders: Order[]
+}
+
+get account all orders
+route: /accounts/orders/:accountName
+return: Order[]
+
+get account all open orders
+route: /accounts/openOrders/:accountName
+return: Order[]
+
 MODELS: #(maybe this model changed. it is better to see the models in /src/models)
 
 Position {
@@ -251,4 +267,17 @@ Statistics {
   longPrecentage: number;
   shortPrecentage: number;
   startDate: Date;
+}
+
+Order {
+  price: number;
+  filledPrice?: number;
+  qty: number;
+  filledQty?: number;
+  side: "buy" | "sell";
+  date: Date;
+  filledDate?: Date;
+  status: "open" | "filled" | "canceled";
+  takeProfits?: Order[];
+  stopLosses?: Order[];
 }

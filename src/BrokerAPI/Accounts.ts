@@ -540,4 +540,29 @@ export class Accounts {
       console.log(error);
     }
   }
+
+  public static async getAllOrders() {
+    return Promise.all(
+      this.accounts.map(async (account) => {
+        return {
+          accountName: account.name,
+          orders: await account.iBrokerAPI.getAllOrders(),
+        };
+      })
+    );
+  }
+
+  public static async getAccountAllOrders(accountName: string) {
+    return await this.accounts
+      .find((account) => account.name === accountName)
+      .iBrokerAPI.getAllOrders();
+  }
+
+  public static async getAccountAllOpenOrders(accountName: string) {
+    return (
+      await this.accounts
+        .find((account) => account.name === accountName)
+        .iBrokerAPI.getAllOrders()
+    ).filter((order) => order.status === "open");
+  }
 }

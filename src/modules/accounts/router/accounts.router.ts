@@ -40,7 +40,7 @@ router
   .route("/statistics/:accountName/:symbol")
   .get(accountsContoller.getAccountStatisticsForSymbol);
 
-  router
+router
   .route("/statisticsPerSymbol/:accountName")
   .get(accountsContoller.getAccountStatisticsPerSymbol);
 
@@ -77,5 +77,11 @@ router
   .get(
     accountsContoller.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits
   );
+
+router.route("/orders").get(accountsContoller.getAllOrders);
+
+router.route("/orders/:accountName").get(accountsContoller.getAccountAllOrders);
+
+router.route("/openOrders/:accountName").get(accountsContoller.getAccountAllOpenOrders);
 
 module.exports = router;
