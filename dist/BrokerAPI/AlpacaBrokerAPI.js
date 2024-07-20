@@ -40,21 +40,6 @@ class AlpacaBrokerAPI {
             paper: true, // Set to true for paper trading
         });
     }
-    disconnect() {
-        return new Promise((resolve) => resolve(true));
-        // Implement disconnection logic for Alpaca
-        // For example: this.alpaca.close();
-    }
-    getAccount() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.getAccount();
-        });
-    }
-    getClock() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.getClock();
-        });
-    }
     getBars(symbol, timeFrame, timeFrameUnit, onlyMarketHours, startDate, endDate) {
         var _a, e_1, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
@@ -97,149 +82,6 @@ class AlpacaBrokerAPI {
             return yield this.convertAlpacaBarsToBars(historicalData);
         });
     }
-    createMarketOrder(symbol, qty, side) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "market",
-                time_in_force: "gtc",
-            });
-        });
-    }
-    createLimitOrder(symbol, qty, side, limitPrice) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "limit",
-                time_in_force: "gtc",
-                limit_price: limitPrice,
-            });
-        });
-    }
-    createStopOrder(symbol, qty, side, stopPrice) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "stop",
-                time_in_force: "gtc",
-                stop_price: stopPrice,
-            });
-        });
-    }
-    createStopLimitOrder(symbol, qty, side, limitPrice, stopPrice) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "stop_limit",
-                time_in_force: "gtc",
-                limit_price: limitPrice,
-                stop_price: stopPrice,
-            });
-        });
-    }
-    createTrailingStopOrder(symbol, qty, side, trailPrice, trailPercent) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "trailing_stop",
-                time_in_force: "gtc",
-                trail_price: trailPrice,
-                trail_percent: trailPercent,
-            });
-        });
-    }
-    createTakeProfitOrder(symbol, qty, side, limitPrice) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.alpaca.createOrder({
-                symbol,
-                qty,
-                side,
-                type: "take_profit",
-                time_in_force: "gtc",
-                limit_price: limitPrice,
-            });
-        });
-    }
-    createEntryPriceWithStopLossAndTargetOrder(symbol, qty, side, entryPrice, stopLossPrice, stopLossQty, takeProfitPrice, takeProfitQty) {
-        return __awaiter(this, void 0, void 0, function* () {
-            //A workaround is to submit several braket orders. As an example, if one wanted to buy 10 shares, but new ahead of time one wanted to first sell 50 shares, then 25, then 25 more, simply submit 3 bracket orders for 50, 25, and 25 shares respectively. Each can have different stop loss and limit prices.
-            //MAIN ORDER
-            yield this.alpaca.createOrder({
-                symbol: symbol,
-                qty: qty * 0.5,
-                side: side,
-                type: "stop",
-                stop_price: 172,
-                time_in_force: "gtc",
-                order_class: "bracket",
-                stop_loss: {
-                    stop_price: 100,
-                    time_in_force: "gtc",
-                },
-                take_profit: {
-                    limit_price: 200,
-                    time_in_force: "gtc",
-                },
-            });
-            yield this.alpaca.createOrder({
-                symbol: symbol,
-                qty: qty * 0.5,
-                side: side,
-                type: "stop",
-                stop_price: 172,
-                time_in_force: "gtc",
-                order_class: "bracket",
-                stop_loss: {
-                    stop_price: 100,
-                    time_in_force: "gtc",
-                },
-                take_profit: {
-                    limit_price: 100000000,
-                    time_in_force: "gtc",
-                },
-            });
-            // // Take Profit Order
-            // await this.alpaca.createOrder({
-            //   symbol: symbol,
-            //   qty: takeProfitPrice,
-            //   side: (side == "buy") ? "sell" : "buy",
-            //   type: "limit",
-            //   limit_price: 180,
-            //   time_in_force: "gtc"
-            // })
-            // // Stop Loss Order
-            // await this.alpaca.createOrder({
-            //   symbol: symbol,
-            //   qty: stopLossQty,
-            //   side: (side === "buy") ? "sell" : "buy",
-            //   type: "stop",
-            //   stop_price: stopLossPrice,
-            //   time_in_force: "gtc"
-            // });
-        });
-    }
-    getOpenOrders(symbol) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const filter = { status: "open", symbol };
-            return this.alpaca.getOrders(filter);
-        });
-    }
-    getCash() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const account = yield this.alpaca.getAccount();
-            return account.cash;
-        });
-    }
     getMoneyAmount() {
         return __awaiter(this, void 0, void 0, function* () {
             return parseInt((yield this.alpaca.getAccount()).portfolio_value);
@@ -278,7 +120,7 @@ class AlpacaBrokerAPI {
                 allOrders = allOrders.concat(orders);
                 index++;
             }
-            return allOrders.filter((order) => order.status !== "canceled").reverse();
+            return allOrders.reverse();
         });
     }
     getPositions() {
@@ -474,7 +316,7 @@ class AlpacaBrokerAPI {
     }
     getStopLossesForShefaStratgey(symbol, tradeType) {
         return __awaiter(this, void 0, void 0, function* () {
-            let orders = yield this.fetchAllOrders(symbol);
+            let orders = (yield this.fetchAllOrders(symbol)).filter((order) => order.status !== "canceled");
             orders = orders.slice(orders.length - 2, orders.length);
             let isOrdersOriginalStopLosses = false;
             orders.forEach((order) => {
@@ -550,7 +392,6 @@ class AlpacaBrokerAPI {
     }
     getPositionExitsForShefaStratgey(orders) {
         const exits = [];
-        // orders = [...orders].reverse();
         const lastLegIndex = orders.findIndex((order) => order.legs);
         orders.slice(lastLegIndex, lastLegIndex + 2).forEach((order) => {
             if (order.legs) {
@@ -589,12 +430,6 @@ class AlpacaBrokerAPI {
                     return null;
                 }
             }
-        });
-    }
-    isInPosition(symbol) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const positions = yield this.alpaca.getPositions();
-            return positions.some((position) => position.symbol === symbol);
         });
     }
     getAccountValuesHistory() {
@@ -763,7 +598,7 @@ class AlpacaBrokerAPI {
             return (0, lodash_1.uniq)((yield this.fetchAllClosedOrders()).map((order) => order.symbol));
         });
     }
-    getOrdersBySymbol(symbol, startDateInMilliseconds) {
+    getClosedOrdersBySymbol(symbol, startDateInMilliseconds) {
         return __awaiter(this, void 0, void 0, function* () {
             const orders = [];
             const brokerOrders = yield this.fetchAllClosedOrders(symbol, startDateInMilliseconds);
@@ -790,6 +625,56 @@ class AlpacaBrokerAPI {
             return orders;
         });
     }
+    getAllOrders(symbol) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const brokerOrders = yield this.fetchAllOrders(symbol);
+            const formattedOrders = [];
+            brokerOrders.forEach((order) => {
+                const formattedOrder = this.convertAlpacaOrderToOrder(order);
+                if (order.legs) {
+                    order.legs.forEach((leg) => {
+                        const formattedLeg = this.convertAlpacaOrderToOrder(leg);
+                        if (leg.stop_price) {
+                            formattedOrder.stopLosses = [formattedLeg];
+                        }
+                        else if (leg.limit_price) {
+                            formattedOrder.takeProfits = [formattedLeg];
+                        }
+                    });
+                }
+                formattedOrders.push(formattedOrder);
+            });
+            return formattedOrders;
+        });
+    }
+    convertAlpacaOrderToOrder(alpacaOrder) {
+        const formattedOrder = {
+            price: parseFloat(alpacaOrder.stop_price) ||
+                parseFloat(alpacaOrder.limit_price) ||
+                parseFloat(alpacaOrder.filled_avg_price),
+            qty: parseInt(alpacaOrder.qty),
+            side: alpacaOrder.side,
+            date: new Date(alpacaOrder.created_at),
+            status: this.convertAlpacaOrderSideToSide(alpacaOrder.status),
+        };
+        if (alpacaOrder.filled_avg_price) {
+            formattedOrder.filledPrice = parseFloat(alpacaOrder.filled_avg_price);
+            formattedOrder.filledQty = parseInt(alpacaOrder.filled_qty);
+            formattedOrder.filledDate = new Date(alpacaOrder.filled_at);
+        }
+        return formattedOrder;
+    }
+    convertAlpacaOrderSideToSide(alpacaOrderSide) {
+        if (alpacaOrderSide === "new" || alpacaOrderSide === "accepted") {
+            return "open";
+        }
+        else if (alpacaOrderSide === "filled" || alpacaOrderSide === "closed") {
+            return "filled";
+        }
+        else if (alpacaOrderSide === "canceled") {
+            return alpacaOrderSide;
+        }
+    }
     convertAlpacaBarsToBars(bars) {
         return __awaiter(this, void 0, void 0, function* () {
             return bars.map((bar) => ({
@@ -803,12 +688,43 @@ class AlpacaBrokerAPI {
     }
     filterBarsOnlyMarketHours(bars, timeframe) {
         return __awaiter(this, void 0, void 0, function* () {
-            return bars.filter((bar) => {
-                const time = bar.Timestamp.substring(12);
-                const hour = +time.substring(0, 2);
-                const minute = +time.substring(3, 5);
-                return this.isTimeBetween(9, 30, 15, 60 - timeframe, hour, minute);
-            });
+            let currDate = "";
+            let currAlpacaOpen = "";
+            let currAlpacaClose = "";
+            const filteredBars = [];
+            for (let bar of bars) {
+                const barYear = bar.Timestamp.substring(6, 10);
+                const barDay = bar.Timestamp.substring(0, 2);
+                const barMonth = bar.Timestamp.substring(3, 5);
+                const barDateInAlpacaFormat = `${barYear}-${barMonth}-${barDay}T00:00:00Z`;
+                if (currDate !== barDateInAlpacaFormat) {
+                    currDate = barDateInAlpacaFormat;
+                    const alpacaCalender = yield this.alpaca.getCalendar({
+                        start: currDate,
+                        end: currDate,
+                    });
+                    if (alpacaCalender.length !== 0) {
+                        currAlpacaOpen = alpacaCalender[0].open;
+                        currAlpacaClose = alpacaCalender[0].close;
+                    }
+                    else {
+                        currAlpacaOpen = null;
+                        currAlpacaClose = null;
+                    }
+                }
+                if (currAlpacaOpen !== null &&
+                    currAlpacaClose !== null &&
+                    this.isTimeBetween(+currAlpacaOpen.substring(0, 2), //startHour
+                    +currAlpacaOpen.substring(3, 5), //startMin
+                    +currAlpacaClose.substring(0, 2), //endHour
+                    -timeframe + +currAlpacaClose.substring(3, 5), //endMin
+                    +bar.Timestamp.substring(12).substring(0, 2), //barHour
+                    +bar.Timestamp.substring(12).substring(3, 5) //barMin
+                    )) {
+                    filteredBars.push(bar);
+                }
+            }
+            return filteredBars;
         });
     }
     getDateInApiFormat(date) {
@@ -823,15 +739,6 @@ class AlpacaBrokerAPI {
         const dateInNewYork = moment_timezone_1.default.tz(dateString, "DD/MM/YYYY, HH:mm:ss", "America/New_York");
         const utcString = dateInNewYork.utc().format("YYYY-MM-DDTHH:mm:ss") + "Z";
         return new Date(utcString);
-    }
-    isClockOpen() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const clock = yield this.getClock();
-            return clock.is_open;
-        });
-    }
-    closePosition(symbol) {
-        this.alpaca.closePosition(symbol);
     }
     isTimeBetween(startHour, startMinute, endHour, endMinute, targetHour, targetMinute) {
         // Convert all times to minutes for easier comparison

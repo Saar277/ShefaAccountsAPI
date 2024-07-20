@@ -55,5 +55,8 @@ router
 router
     .route("/bars/withMinMax/:accountName/:symbol/:timeFrame/:TimeFrameUnit/:startMilliseconds/:rollingWindow")
     .get(accounts_contoller_1.default.getBarsWithOrdersAndMinMaxPointsAndStopLossesAndTakeProfits);
+router.route("/orders").get(accounts_contoller_1.default.getAllOrders);
+router.route("/orders/:accountName").get(accounts_contoller_1.default.getAccountAllOrders);
+router.route("/openOrders/:accountName").get(accounts_contoller_1.default.getAccountAllOpenOrders);
 module.exports = router;
 //# sourceMappingURL=accounts.router.js.map

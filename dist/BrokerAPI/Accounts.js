@@ -284,7 +284,7 @@ class Accounts {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const account = this.accounts.find((account) => account.name === accountName);
-                const orders = yield account.iBrokerAPI.getOrdersBySymbol(symbol, startDateInMilliseconds);
+                const orders = yield account.iBrokerAPI.getClosedOrdersBySymbol(symbol, startDateInMilliseconds);
                 const fiveDaysInMilliseconds = 432000000;
                 const startDate = startDateInMilliseconds
                     ? new Date(startDateInMilliseconds).toISOString()
@@ -347,6 +347,30 @@ class Accounts {
             catch (error) {
                 console.log(error);
             }
+        });
+    }
+    static getAllOrders() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return Promise.all(this.accounts.map((account) => __awaiter(this, void 0, void 0, function* () {
+                return {
+                    accountName: account.name,
+                    orders: yield account.iBrokerAPI.getAllOrders(),
+                };
+            })));
+        });
+    }
+    static getAccountAllOrders(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAllOrders();
+        });
+    }
+    static getAccountAllOpenOrders(accountName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return (yield this.accounts
+                .find((account) => account.name === accountName)
+                .iBrokerAPI.getAllOrders()).filter((order) => order.status === "open");
         });
     }
 }

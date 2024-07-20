@@ -198,6 +198,34 @@ class AccountsController {
                 res.status(500).send();
             }
         });
+        this.getAllOrders = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res.status(200).send(yield Accounts_1.Accounts.getAllOrders());
+            }
+            catch (_u) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountAllOrders = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountAllOrders(req.params.accountName));
+            }
+            catch (_v) {
+                res.status(500).send();
+            }
+        });
+        this.getAccountAllOpenOrders = (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                res
+                    .status(200)
+                    .send(yield Accounts_1.Accounts.getAccountAllOpenOrders(req.params.accountName));
+            }
+            catch (_w) {
+                res.status(500).send();
+            }
+        });
     }
 }
 exports.default = new AccountsController();
