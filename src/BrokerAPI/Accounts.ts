@@ -429,7 +429,7 @@ export class Accounts {
         (account) => account.name === accountName
       );
 
-      const orders = await account.iBrokerAPI.getOrdersBySymbol(
+      const orders = await account.iBrokerAPI.getClosedOrdersBySymbol(
         symbol,
         startDateInMilliseconds
       );

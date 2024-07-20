@@ -21,6 +21,7 @@ import OrderPoint from "../models/orderPoint";
 import { StrategyType } from "../models/strategiesTypes";
 import { AccountInfo } from "../models/AccountInfo";
 import { Trade } from "../models/Trade";
+import { Order } from "../models/Order";
 
 class AlpacaBrokerAPI implements IBrokerAPI {
   static baseUrl = "https://paper-api.alpaca.markets"; // Use the paper trading base URL for testing
@@ -42,20 +43,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       baseUrl: AlpacaBrokerAPI.baseUrl,
       paper: true, // Set to true for paper trading
     });
-  }
-
-  disconnect(): Promise<any> {
-    return new Promise<any>((resolve) => resolve(true));
-    // Implement disconnection logic for Alpaca
-    // For example: this.alpaca.close();
-  }
-
-  async getAccount(): Promise<any> {
-    return this.alpaca.getAccount();
-  }
-
-  async getClock(): Promise<any> {
-    return this.alpaca.getClock();
   }
 
   async getBars(
@@ -89,184 +76,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         ? await this.filterBarsOnlyMarketHours(historicalData, timeFrame)
         : historicalData;
     return await this.convertAlpacaBarsToBars(historicalData);
-  }
-
-  async createMarketOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell"
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "market",
-      time_in_force: "gtc",
-    });
-  }
-
-  async createLimitOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    limitPrice: number
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "limit",
-      time_in_force: "gtc",
-      limit_price: limitPrice,
-    });
-  }
-
-  async createStopOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    stopPrice: number
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "stop",
-      time_in_force: "gtc",
-      stop_price: stopPrice,
-    });
-  }
-
-  async createStopLimitOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    limitPrice: number,
-    stopPrice: number
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "stop_limit",
-      time_in_force: "gtc",
-      limit_price: limitPrice,
-      stop_price: stopPrice,
-    });
-  }
-
-  async createTrailingStopOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    trailPrice: number,
-    trailPercent: number
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "trailing_stop",
-      time_in_force: "gtc",
-      trail_price: trailPrice,
-      trail_percent: trailPercent,
-    });
-  }
-
-  async createTakeProfitOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    limitPrice: number
-  ): Promise<any> {
-    return this.alpaca.createOrder({
-      symbol,
-      qty,
-      side,
-      type: "take_profit",
-      time_in_force: "gtc",
-      limit_price: limitPrice,
-    });
-  }
-
-  async createEntryPriceWithStopLossAndTargetOrder(
-    symbol: string,
-    qty: number,
-    side: "buy" | "sell",
-    entryPrice: number,
-    stopLossPrice: number,
-    stopLossQty: number,
-    takeProfitPrice: number,
-    takeProfitQty: number
-  ): Promise<any> {
-    //A workaround is to submit several braket orders. As an example, if one wanted to buy 10 shares, but new ahead of time one wanted to first sell 50 shares, then 25, then 25 more, simply submit 3 bracket orders for 50, 25, and 25 shares respectively. Each can have different stop loss and limit prices.
-
-    //MAIN ORDER
-    await this.alpaca.createOrder({
-      symbol: symbol,
-      qty: qty * 0.5,
-      side: side,
-      type: "stop",
-      stop_price: 172,
-      time_in_force: "gtc",
-      order_class: "bracket",
-      stop_loss: {
-        stop_price: 100,
-        time_in_force: "gtc",
-      },
-      take_profit: {
-        limit_price: 200,
-        time_in_force: "gtc",
-      },
-    });
-
-    await this.alpaca.createOrder({
-      symbol: symbol,
-      qty: qty * 0.5,
-      side: side,
-      type: "stop",
-      stop_price: 172,
-      time_in_force: "gtc",
-      order_class: "bracket",
-      stop_loss: {
-        stop_price: 100,
-        time_in_force: "gtc",
-      },
-      take_profit: {
-        limit_price: 100000000,
-        time_in_force: "gtc",
-      },
-    });
-
-    // // Take Profit Order
-    // await this.alpaca.createOrder({
-    //   symbol: symbol,
-    //   qty: takeProfitPrice,
-    //   side: (side == "buy") ? "sell" : "buy",
-    //   type: "limit",
-    //   limit_price: 180,
-    //   time_in_force: "gtc"
-    // })
-
-    // // Stop Loss Order
-    // await this.alpaca.createOrder({
-    //   symbol: symbol,
-    //   qty: stopLossQty,
-    //   side: (side === "buy") ? "sell" : "buy",
-    //   type: "stop",
-    //   stop_price: stopLossPrice,
-    //   time_in_force: "gtc"
-    // });
-  }
-
-  async getOpenOrders(symbol?: string): Promise<any[]> {
-    const filter: any = { status: "open", symbol };
-    return this.alpaca.getOrders(filter);
-  }
-
-  async getCash(): Promise<number> {
-    const account = await this.alpaca.getAccount();
-    return account.cash;
   }
 
   async getMoneyAmount(): Promise<number> {
@@ -317,7 +126,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
       index++;
     }
 
-    return allOrders.filter((order) => order.status !== "canceled").reverse();
+    return allOrders.reverse();
   }
 
   async getPositions(): Promise<Position[]> {
@@ -432,7 +241,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         entryPrice: parseFloat(brokerPosition.avg_entry_price),
       };
 
-      position.wantedEntryPrice = parseFloat(lastTwoOrdersWithLegs[0].stop_price);
+      position.wantedEntryPrice = parseFloat(
+        lastTwoOrdersWithLegs[0].stop_price
+      );
       position.pNl = parseFloat(brokerPosition.unrealized_pl);
 
       const takeProfit = this.getTakeProfitOrderForShefaStratgey(
@@ -574,7 +385,9 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     symbol: string,
     tradeType: TradeType
   ): Promise<OrderPoint[]> {
-    let orders = await this.fetchAllOrders(symbol);
+    let orders = (await this.fetchAllOrders(symbol)).filter(
+      (order: any) => order.status !== "canceled"
+    );
     orders = orders.slice(orders.length - 2, orders.length);
 
     let isOrdersOriginalStopLosses: boolean = false;
@@ -660,7 +473,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
   getPositionExitsForShefaStratgey(orders: any[]): OrderPoint[] {
     const exits: OrderPoint[] = [];
 
-    // orders = [...orders].reverse();
     const lastLegIndex: number = orders.findIndex((order) => order.legs);
 
     orders.slice(lastLegIndex, lastLegIndex + 2).forEach((order) => {
@@ -701,11 +513,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
         return null;
       }
     }
-  }
-
-  async isInPosition(symbol: string): Promise<boolean> {
-    const positions: any[] = await this.alpaca.getPositions();
-    return positions.some((position) => position.symbol === symbol);
   }
 
   async getAccountValuesHistory(): Promise<{ value: number; date: Date }[]> {
@@ -929,7 +736,7 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     );
   }
 
-  async getOrdersBySymbol(
+  async getClosedOrdersBySymbol(
     symbol: string,
     startDateInMilliseconds?: number
   ): Promise<
@@ -982,6 +789,31 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     return orders;
   }
 
+  async getAllOrders(symbol?: string) {
+    const brokerOrders = await this.fetchAllOrders(symbol);
+    const formatted_orders: Order[] = [];
+
+    brokerOrders.forEach((order) => {
+      const formatted_order: Order = {
+        price: parseFloat(order.stop_price) || parseFloat(order.limit_price) || parseFloat(order.filled_avg_price),
+        qty: parseInt(order.qty),
+        side: order.side,
+        date: new Date(order.created_at),
+        status: order.status
+      };
+
+      if (order.filled_avg_price) {
+        formatted_order.filledPrice = parseFloat(order.filled_avg_price);
+        formatted_order.filledQty = parseInt(order.filled_qty);
+        formatted_order.filledDate = new Date(order.filled_at); 
+      }
+
+      if (order.legs) {
+        //TODO: continue from here
+      }
+    })
+  }
+
   async convertAlpacaBarsToBars(bars: AlpacaBar[]): Promise<Bar[]> {
     return bars.map((bar) => ({
       openPrice: bar.OpenPrice,
@@ -996,13 +828,51 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     bars: AlpacaBar[],
     timeframe: number
   ): Promise<AlpacaBar[]> {
-    return bars.filter((bar) => {
-      const time = bar.Timestamp.substring(12);
-      const hour: number = +time.substring(0, 2);
-      const minute: number = +time.substring(3, 5);
+    let currDate = "";
+    let currAlpacaOpen = "";
+    let currAlpacaClose = "";
+    const filteredBars = [];
 
-      return this.isTimeBetween(9, 30, 15, 60 - timeframe, hour, minute);
-    });
+    for (let bar of bars) {
+      const barYear = bar.Timestamp.substring(6, 10);
+      const barDay = bar.Timestamp.substring(0, 2);
+      const barMonth = bar.Timestamp.substring(3, 5);
+      const barDateInAlpacaFormat = `${barYear}-${barMonth}-${barDay}T00:00:00Z`;
+
+      if (currDate !== barDateInAlpacaFormat) {
+        currDate = barDateInAlpacaFormat;
+
+        const alpacaCalender = await this.alpaca.getCalendar({
+          start: currDate,
+          end: currDate,
+        });
+
+        if (alpacaCalender.length !== 0) {
+          currAlpacaOpen = alpacaCalender[0].open;
+          currAlpacaClose = alpacaCalender[0].close;
+        } else {
+          currAlpacaOpen = null;
+          currAlpacaClose = null;
+        }
+      }
+
+      if (
+        currAlpacaOpen !== null &&
+        currAlpacaClose !== null &&
+        this.isTimeBetween(
+          +currAlpacaOpen.substring(0, 2), //startHour
+          +currAlpacaOpen.substring(3, 5), //startMin
+          +currAlpacaClose.substring(0, 2), //endHour
+          -timeframe + +currAlpacaClose.substring(3, 5), //endMin
+          +bar.Timestamp.substring(12).substring(0, 2), //barHour
+          +bar.Timestamp.substring(12).substring(3, 5) //barMin
+        )
+      ) {
+        filteredBars.push(bar);
+      }
+    }
+
+    return filteredBars;
   }
 
   public getDateInApiFormat(date: Date): string {
@@ -1025,15 +895,6 @@ class AlpacaBrokerAPI implements IBrokerAPI {
     const utcString = dateInNewYork.utc().format("YYYY-MM-DDTHH:mm:ss") + "Z";
 
     return new Date(utcString);
-  }
-
-  public async isClockOpen(): Promise<boolean> {
-    const clock: any = await this.getClock();
-    return clock.is_open;
-  }
-
-  closePosition(symbol: string): void {
-    this.alpaca.closePosition(symbol);
   }
 
   isTimeBetween(
