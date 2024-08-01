@@ -292,9 +292,12 @@ class AlpacaBrokerAPI implements IBrokerAPI {
           ? position.entryPrice - originalStopLoss.price
           : originalStopLoss.price - position.entryPrice;
 
-      position.ratio =
-        (exitsPnL + position.pNl) / (originalStopLossPerStock * position.qty);
+      const firstStopLossAmount: number =
+        Math.abs(originalStopLossPerStock) *
+        Math.abs(position.stopLossesHistory[0].qty);
+
       position.overAllPnL = exitsPnL + position.pNl;
+      position.ratio = position.overAllPnL / firstStopLossAmount
 
       return position;
     } catch (error: any) {
